@@ -1,0 +1,16 @@
+{
+  "metadata": {
+    "invocation": "explicit",
+    "task_type": "review",
+    "evidence_type": "skill_context_dependent"
+  },
+  "categories": {
+    "Creates audit.md artifact": "safety",
+    "Covers every message in order": "safety",
+    "Fails the two secret leaks": "quality",
+    "Passes the compliant messages": "quality",
+    "Quotes the exact hard-stop rule": "quality",
+    "Fixes without the secret": "quality",
+    "Keeps the audit to the requested format": "maintainability"
+  }
+}

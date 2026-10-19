@@ -1,0 +1,41 @@
+{
+  "context": "Reference coverage: an explicit review of four error messages in a payment webhook. A good review rewrites each one in the team form (cannot <verb> <thing> \"<value>\": <expected or next step>), removes the card number and API key from the log line, and restores the exception cause.",
+  "type": "weighted_checklist",
+  "checklist": [
+    {
+      "name": "Creates review.md artifact",
+      "max_score": 5,
+      "description": "Creates review.md with the findings instead of answering only in chat."
+    },
+    {
+      "name": "Preserves webhook behavior",
+      "max_score": 10,
+      "description": "Proposed fixes keep the same exception types, signature check, accepted event types, and capture call; only message text, logged values, and exception chaining change."
+    },
+    {
+      "name": "Flags the leaked card number and API key",
+      "max_score": 25,
+      "description": "States that the log line exposes the full card number and the gateway API key, and gives a replacement that names the charge or the last four digits without either secret."
+    },
+    {
+      "name": "Rewrites each message in the team form",
+      "max_score": 30,
+      "description": "Gives a replacement for the signature, event type, log, and RuntimeError messages that starts with lowercase 'cannot', a verb, and the thing that failed, quotes a non-secret offending value such as the event type or charge id, and ends after a colon with what was expected or the next step."
+    },
+    {
+      "name": "Restores the exception cause",
+      "max_score": 15,
+      "description": "Points out that 'from None' hides the TimeoutError and replaces it with 'from err' or an equivalent that keeps the cause attached."
+    },
+    {
+      "name": "Drops decoration from messages",
+      "max_score": 10,
+      "description": "Replacement messages have no 'Error:', 'Invalid', or 'Failed to' prefix, no exclamation mark, no vague 'Something went wrong', and no trailing period."
+    },
+    {
+      "name": "Keeps the review focused",
+      "max_score": 5,
+      "description": "Stays on error reporting and does not propose unrelated refactors, new dependencies, or retry logic."
+    }
+  ]
+}

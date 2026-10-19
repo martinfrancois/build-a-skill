@@ -1,0 +1,16 @@
+{
+  "metadata": {
+    "invocation": "explicit",
+    "task_type": "review",
+    "evidence_type": "ordinary_lift"
+  },
+  "categories": {
+    "Creates review.md artifact": "safety",
+    "Preserves webhook behavior": "safety",
+    "Flags the leaked card number and API key": "quality",
+    "Rewrites each message in the team form": "quality",
+    "Restores the exception cause": "quality",
+    "Drops decoration from messages": "quality",
+    "Keeps the review focused": "maintainability"
+  }
+}

@@ -1,0 +1,1 @@
+Write configuration validation whose error messages follow the team convention and keep credentials out of the startup log.

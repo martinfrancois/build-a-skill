@@ -1,0 +1,41 @@
+{
+  "context": "Regression coverage that needs the exact hard-stop wording from the skill package. Two of the four messages leak a secret (the reset token and the new password); the other two follow the convention.",
+  "type": "weighted_checklist",
+  "checklist": [
+    {
+      "name": "Creates audit.md artifact",
+      "max_score": 5,
+      "description": "Creates audit.md instead of answering only in chat."
+    },
+    {
+      "name": "Covers every message in order",
+      "max_score": 10,
+      "description": "Lists all four messages from accounts.py, in source order, one line each."
+    },
+    {
+      "name": "Fails the two secret leaks",
+      "max_score": 30,
+      "description": "Marks the reset-token message and the reused-password message as fail because each one puts a secret value into the message."
+    },
+    {
+      "name": "Passes the compliant messages",
+      "max_score": 20,
+      "description": "Marks the short-password message and the locked-account message as pass; the email address is not a secret."
+    },
+    {
+      "name": "Quotes the exact hard-stop rule",
+      "max_score": 20,
+      "description": "Each fail line quotes the skill's rule word for word, starting with 'Never put a secret into an error message or log line'."
+    },
+    {
+      "name": "Fixes without the secret",
+      "max_score": 10,
+      "description": "Each fixed message names the token or password field without its value and keeps the 'cannot <verb> <thing>: <next step>' form."
+    },
+    {
+      "name": "Keeps the audit to the requested format",
+      "max_score": 5,
+      "description": "Writes only the requested lines and fixes, without rewriting the passing messages or adding unrelated advice."
+    }
+  ]
+}

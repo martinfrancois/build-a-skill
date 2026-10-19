@@ -1,0 +1,46 @@
+{
+  "context": "Main eval: settings validation in Python where every ValueError message should follow the team convention (cannot <verb> <thing> \"<value>\": <expected or next step>) and the DATABASE_URL credentials must never reach a message.",
+  "type": "weighted_checklist",
+  "checklist": [
+    {
+      "name": "Creates coherent settings.py artifact",
+      "max_score": 5,
+      "description": "Creates settings.py with load_settings(env) and a frozen Settings dataclass, using only the Python 3.12 standard library."
+    },
+    {
+      "name": "Preserves validation behavior",
+      "max_score": 10,
+      "description": "Returns Settings with parsed int port and workers, raises ValueError for a missing or invalid PORT, LOG_LEVEL, or DATABASE_URL and for an invalid WORKERS, checks in the listed order, and defaults WORKERS to 4."
+    },
+    {
+      "name": "Names the failed operation first",
+      "max_score": 25,
+      "description": "Every ValueError message starts with lowercase 'cannot', a verb, and the setting name, for example 'cannot read PORT'."
+    },
+    {
+      "name": "Quotes the offending value",
+      "max_score": 15,
+      "description": "Messages for an invalid PORT, LOG_LEVEL, or WORKERS value include the received value in double quotes right after the setting name. Missing-setting messages need no value."
+    },
+    {
+      "name": "States what was expected",
+      "max_score": 15,
+      "description": "Each message ends, after a colon, with the expected form or range (such as 'expected a whole number from 1 to 65535') or the step the operator can take."
+    },
+    {
+      "name": "Keeps the database password out of messages",
+      "max_score": 20,
+      "description": "No message, log call, or exception interpolates the DATABASE_URL value or any part of it that carries the user name or password. The DATABASE_URL message names the setting without echoing the URL."
+    },
+    {
+      "name": "Uses the plain one-line form",
+      "max_score": 5,
+      "description": "Messages have no 'Error:', 'Invalid', or 'Failed to' prefix, no apology, no exclamation mark, and no trailing period."
+    },
+    {
+      "name": "Keeps implementation focused",
+      "max_score": 5,
+      "description": "Adds no third-party dependencies, custom exception hierarchy, logging setup, or settings beyond the four requested."
+    }
+  ]
+}

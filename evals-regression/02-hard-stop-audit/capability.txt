@@ -1,0 +1,1 @@
+Audit error messages against the skill's secret hard stop and quote its exact rule text.

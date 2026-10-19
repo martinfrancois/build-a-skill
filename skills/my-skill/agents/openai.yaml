@@ -1,0 +1,4 @@
+interface:
+  display_name: "My Skill"
+  short_description: "This team's error message convention"
+  default_prompt: "Use $my-skill when writing, reviewing, or cleaning up code that raises, throws, returns, or logs an error message."

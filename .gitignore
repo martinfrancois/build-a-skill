@@ -1,0 +1,10 @@
+.DS_Store
+*.tgz
+__pycache__/
+*.py[cod]
+.tessl/cache/
+.tessl/tmp/
+.tessl/eval-evidence/
+.codex/
+.mcp.json
+.vscode/

@@ -1,0 +1,11 @@
+{
+  "name": "martinfrancois/my-skill",
+  "version": "0.1.0",
+  "description": "Help AI coding agents write and review error messages that follow one team convention and never leak secrets.",
+  "summary": "Help AI coding agents write and review error messages that follow one team convention and never leak secrets.",
+  "repository": "https://github.com/martinfrancois/skill-starter",
+  "homepage": "https://github.com/martinfrancois/skill-starter#readme",
+  "license": "MIT",
+  "entrypoint": "README.md",
+  "private": false
+}

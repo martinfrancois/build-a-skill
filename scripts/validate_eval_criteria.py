@@ -386,7 +386,8 @@ def validate_scenario(scenario: Scenario) -> list[str]:
     phrase = skill_context_phrase(scenario_wording(scenario.task_text, data))
     if phrase and evidence_type != "skill_context_dependent":
         failures.append(
-            f"{criteria_file}: the phrase {phrase!r} says the scenario needs the skill's own text. "
+            f"{scenario.path}: the phrase {phrase!r} in task.md or criteria.json says the scenario "
+            "needs the skill's own text. "
             "Reword it if the scenario does not, or set metadata.evidence_type to "
             f"skill_context_dependent and move the scenario to {REGRESSION_SUITE}/"
         )

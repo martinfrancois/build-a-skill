@@ -15,32 +15,25 @@ Examples:
   scripts/run_eval_suite.sh main -- --label "main check"
   scripts/run_eval_suite.sh reference 01-webhook-error-review -- --label "targeted reference"
   scripts/run_eval_suite.sh regression -- --label "regression safety"
-  scripts/run_eval_suite.sh main -- --agent claude --model claude-sonnet-4-6 --label "model check"
 
-Model selection:
-  The default commands use the current Tessl default solver. Picking a model with --agent and
-  --model needs the modelSelection entitlement; on plans without it (including many free plans)
-  Tessl answers "Missing required entitlement". Run `tessl eval run --list-agents` to see the
-  current default. Background:
-  - https://docs.tessl.io/changelog
-  - https://tessl.io/blog/why-were-changing-our-default-eval-model/
+The runs use the current Tessl default solver; `tessl eval run --list-agents` shows it. Picking
+another one with --agent and --model after -- needs the modelSelection entitlement, which many
+free plans lack.
 
-Do not pass --variant or --skip-baseline. This script chooses variants from the suite purpose.
+Do not pass --skip-baseline. This script chooses variants from the suite purpose.
 The runner passes --skill <name> so with-context runs exercise this skill instead of relying on
 solver auto-selection. The name is $SKILL_NAME, or the only folder under skills/. It also passes
 --force so runs after a skill or runner fix cannot reuse stale hosted solutions.
 USAGE
 }
 
-print_suite_scenarios() {
-  local dir="$1"
-  local scenario
-
-  for scenario in "$dir"/*; do
-    if [[ -d "$scenario" ]]; then
-      printf '  %s\n' "$(basename "$scenario")"
-    fi
-  done | sort
+reject_variant_flag() {
+  case "$1" in
+    --skip-baseline|--skip-baseline=*)
+      echo "Do not pass --skip-baseline; scripts/run_eval_suite.sh chooses variants by suite." >&2
+      exit 2
+      ;;
+  esac
 }
 
 if [[ $# -lt 1 ]]; then
@@ -51,6 +44,7 @@ fi
 suite="$1"
 shift
 
+variant_args=()
 case "$suite" in
   main)
     source_dir="evals"
@@ -63,6 +57,7 @@ case "$suite" in
   regression)
     source_dir="evals-regression"
     variant_label="with-context only"
+    variant_args=(--skip-baseline)
     ;;
   -h|--help|help)
     usage
@@ -78,30 +73,17 @@ esac
 scenarios=()
 extra_args=()
 while [[ $# -gt 0 ]]; do
-  case "$1" in
-    --)
-      shift
-      extra_args=("$@")
-      break
-      ;;
-    --variant|--variant=*|--skip-baseline|--skip-baseline=*)
-      echo "Do not pass --variant or --skip-baseline; scripts/run_eval_suite.sh chooses variants by suite." >&2
-      exit 2
-      ;;
-    *)
-      scenarios+=("$1")
-      shift
-      ;;
-  esac
+  if [[ "$1" == "--" ]]; then
+    shift
+    extra_args=("$@")
+    break
+  fi
+  reject_variant_flag "$1"
+  scenarios+=("$1")
+  shift
 done
-
-for arg in "${extra_args[@]}"; do
-  case "$arg" in
-    --variant|--variant=*|--skip-baseline|--skip-baseline=*)
-      echo "Do not pass --variant or --skip-baseline; scripts/run_eval_suite.sh chooses variants by suite." >&2
-      exit 2
-      ;;
-  esac
+for arg in ${extra_args[@]+"${extra_args[@]}"}; do
+  reject_variant_flag "$arg"
 done
 
 if ! command -v tessl >/dev/null 2>&1; then
@@ -109,62 +91,48 @@ if ! command -v tessl >/dev/null 2>&1; then
   exit 127
 fi
 
-eval_run_help="$(tessl eval run --help 2>&1 || true)"
-# Match the whole flag: newer CLIs list --variant-json but reject --variant.
-if grep -qE -- '--variant([^-[:alnum:]]|$)' <<<"$eval_run_help"; then
-  case "$suite" in
-    main|reference)
-      variant_args=(--variant without-context --variant with-context)
-      ;;
-    regression)
-      variant_args=(--variant with-context)
-      ;;
-  esac
-elif grep -q -- "--skip-baseline" <<<"$eval_run_help"; then
-  case "$suite" in
-    main|reference)
-      variant_args=()
-      ;;
-    regression)
-      variant_args=(--skip-baseline)
-      ;;
-  esac
-else
-  echo "Unsupported tessl eval run CLI: expected --variant or --skip-baseline support." >&2
-  exit 2
-fi
-
 repo_root="$(git rev-parse --show-toplevel 2>/dev/null || pwd)"
 source_path="$repo_root/$source_dir"
-skill_name="${SKILL_NAME:-}"
-if [[ -z "$skill_name" ]]; then
-  skill_dirs=("$repo_root"/skills/*/SKILL.md)
-  if [[ "${#skill_dirs[@]}" -ne 1 || ! -f "${skill_dirs[0]}" ]]; then
-    echo "Set SKILL_NAME: expected exactly one skills/<name>/SKILL.md under $repo_root." >&2
-    exit 2
-  fi
-  skill_name="$(basename "$(dirname "${skill_dirs[0]}")")"
-fi
-skill_args=(--skill "$skill_name")
-freshness_args=(--force)
 if [[ ! -d "$source_path" ]]; then
   echo "Missing suite directory: $source_path" >&2
   exit 1
 fi
 
-if [[ "$suite" == "main" && "${#scenarios[@]}" -eq 0 ]]; then
-  echo "Running main eval suite from the linked plugin path."
-  echo "Scenarios:"
-  print_suite_scenarios "$source_path"
-  echo "Eval mode: $variant_label"
+skill_name="${SKILL_NAME:-}"
+if [[ -z "$skill_name" ]]; then
+  skill_files=("$repo_root"/skills/*/SKILL.md)
+  if [[ "${#skill_files[@]}" -ne 1 || ! -f "${skill_files[0]}" ]]; then
+    echo "Set SKILL_NAME: expected exactly one skills/<name>/SKILL.md under $repo_root." >&2
+    exit 2
+  fi
+  skill_name="$(basename "$(dirname "${skill_files[0]}")")"
+fi
 
+# Prints the scenarios in evals/, then runs tessl against the repository as a plugin.
+run_staged_evals() {
+  local scenario
+  echo "Scenarios:"
+  for scenario in "$repo_root/evals"/*/; do
+    if [[ -d "$scenario" ]]; then
+      printf '  %s\n' "$(basename "$scenario")"
+    fi
+  done | sort
+  echo "Eval mode: $variant_label"
   (
     cd "$repo_root"
-    tessl eval run "${variant_args[@]}" "${skill_args[@]}" "${freshness_args[@]}" "${extra_args[@]}" .
+    # The ${name[@]+...} form keeps empty arrays working under set -u in bash 3.2 (macOS).
+    tessl eval run ${variant_args[@]+"${variant_args[@]}"} --skill "$skill_name" --force \
+      ${extra_args[@]+"${extra_args[@]}"} .
   )
+}
+
+if [[ "$suite" == "main" && "${#scenarios[@]}" -eq 0 ]]; then
+  echo "Running the main eval suite."
+  run_staged_evals
   exit 0
 fi
 
+# Tessl reads scenarios from evals/, so stage the requested ones there and restore it on exit.
 tmp_dir="$(mktemp -d)"
 backup_evals="$tmp_dir/evals-original"
 staged_evals="$repo_root/evals"
@@ -193,44 +161,30 @@ copy_scenario() {
     candidate="$source_path/$requested"
   elif [[ -d "$requested" ]]; then
     candidate="$(cd "$requested" && pwd)"
+  elif [[ -d "$source_path/$(basename "$requested")" ]]; then
+    candidate="$source_path/$(basename "$requested")"
   else
-    local base
-    base="$(basename "$requested")"
-    if [[ -d "$source_path/$base" ]]; then
-      candidate="$source_path/$base"
-    else
-      echo "Unknown $suite scenario: $requested" >&2
-      exit 1
-    fi
+    echo "Unknown $suite scenario: $requested" >&2
+    exit 1
   fi
 
   cp -a "$candidate" "$staged_evals/"
 }
 
 if [[ "${#scenarios[@]}" -eq 0 ]]; then
-  found=false
-  for scenario in "$source_path"/*; do
+  for scenario in "$source_path"/*/; do
     if [[ -d "$scenario" ]]; then
-      found=true
-      cp -a "$scenario" "$staged_evals/"
+      scenarios+=("$(basename "$scenario")")
     fi
   done
-  if [[ "$found" == false ]]; then
+  if [[ "${#scenarios[@]}" -eq 0 ]]; then
     echo "No scenarios found in $source_path" >&2
     exit 1
   fi
-else
-  for scenario in "${scenarios[@]}"; do
-    copy_scenario "$scenario"
-  done
 fi
+for scenario in "${scenarios[@]}"; do
+  copy_scenario "$scenario"
+done
 
-echo "Running $suite eval suite from the linked plugin path with a temporary evals/ staging area."
-echo "Scenarios:"
-print_suite_scenarios "$staged_evals"
-echo "Eval mode: $variant_label"
-
-(
-  cd "$repo_root"
-  tessl eval run "${variant_args[@]}" "${skill_args[@]}" "${freshness_args[@]}" "${extra_args[@]}" .
-)
+echo "Running the $suite eval suite with a temporary evals/ staging area."
+run_staged_evals

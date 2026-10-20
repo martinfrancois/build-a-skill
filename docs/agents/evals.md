@@ -30,19 +30,24 @@ much the skill helps.
   - `criteria-meta.json` holds this repository's `metadata` (`invocation`, `task_type`,
     `evidence_type`) and a `categories` map from each checklist name to `safety`, `quality`, or
     `maintainability`.
-- Score each scenario out of 100: 15 safety points (the file exists, behavior is preserved), 80
-  quality points (what the skill teaches), 5 maintainability points (the change stays focused).
-  The validator checks the split in every scenario.
+- Score each scenario out of 100: 15 safety points, 80 quality points (what the skill teaches),
+  and 5 maintainability points (the change stays focused). The validator checks the split in
+  every scenario. Only in main implementation scenarios does it also require a check that the
+  requested file is created and a check that behavior is preserved, found by words such as
+  "creates" and "preserve" in a check's name or description. Elsewhere, choose the safety checks
+  that fit the task.
 - Put the quality points where the with-skill and without-skill runs differ. A check both
   variants pass earns few points.
 - `invocation` is `natural` when the prompt never names the skill and `explicit` when it says
   `Use $my-skill`. Report the two separately; only natural scenarios show that the description
   triggers the skill. The validator does not require a mix, because an explicit-only skill can
   have no natural scenarios.
-- A scenario needs the skill's own text when its task or criteria use one of these phrases:
-  "skill bundle", "the skill's", "as the skill says", "from the skill", or "bundled". The
-  validator then requires `evidence_type: skill_context_dependent` in `evals-regression/`. If the
-  scenario does not need the skill's text, reword the phrase instead of moving it.
+- A scenario needs the skill's own text when one of these phrases appears as whole words in
+  `task.md`, the `context` of `criteria.json`, or the name or description of a check: "skill
+  bundle", "the skill's", "as the skill says", "from the skill", or "bundled". The validator
+  reads nothing else, so `criteria-meta.json` and `capability.txt` never trigger it. It then
+  requires `evidence_type: skill_context_dependent` in `evals-regression/`. If the scenario does
+  not need the skill's text, reword the phrase instead of moving it.
 
 ### Suites
 

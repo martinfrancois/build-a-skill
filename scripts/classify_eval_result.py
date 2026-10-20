@@ -13,7 +13,7 @@ import json
 from pathlib import Path
 from typing import Any
 
-from eval_common import error, load_criteria, normalized, skill_context_phrase
+from eval_common import error, load_criteria, normalized, scenario_wording, skill_context_phrase
 
 # The promotion rule from evals/NUMBERING.md: a delta of at least this many percentage points.
 MAIN_DELTA_FLOOR = 30.0
@@ -32,15 +32,13 @@ def score(solution: dict[str, Any]) -> Score:
 
 
 def local_scenario(path: Path | None) -> tuple[str, dict[str, Any]]:
-    """Return the local task and criteria wording plus metadata for a scenario folder."""
+    """Return the task and criteria wording plus the metadata of a local scenario folder."""
     if path is None:
         return "", {}
     task = (path / "task.md").read_text(encoding="utf-8") if (path / "task.md").is_file() else ""
     criteria_file = path / "criteria.json"
     data, _ = load_criteria(criteria_file) if criteria_file.is_file() else (None, [])
-    if not data:
-        return task, {}
-    return f"{task}\n{json.dumps(data, sort_keys=True)}", data["metadata"]
+    return scenario_wording(task, data), data["metadata"] if data else {}
 
 
 def find_scenario(data: dict[str, Any], query: str | None) -> dict[str, Any]:

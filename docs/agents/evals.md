@@ -32,6 +32,7 @@ much the skill helps.
     `maintainability`.
 - Score each scenario out of 100: 15 safety points (the file exists, behavior is preserved), 80
   quality points (what the skill teaches), 5 maintainability points (the change stays focused).
+  The validator checks the split in every scenario.
 - Put the quality points where the with-skill and without-skill runs differ. A check both
   variants pass earns few points.
 - `invocation` is `natural` when the prompt never names the skill and `explicit` when it says
@@ -61,9 +62,10 @@ much the skill helps.
 
 - No answer keys in `skills/my-skill/references/`: no scenario names, expected outputs, rubrics,
   run IDs, or scores.
-- A task that shares identifiers or long phrases with a runtime reference is not ordinary lift.
-  The validator flags it; rewrite the task in another domain, or classify it as focused evidence
-  with a written `runtime_reference_overlap_rationale`.
+- A scenario that shares code identifiers with a runtime reference, or a run of five words with
+  it anywhere in its task, capability, or criteria, is not ordinary lift. The validator flags
+  it; move the reference example to another domain, or classify the scenario as focused
+  evidence with a written `runtime_reference_overlap_rationale`.
 
 ### Spending credits
 

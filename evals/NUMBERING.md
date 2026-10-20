@@ -7,9 +7,11 @@
 - `evals-reference/` and `evals-regression/` share one number space. A scenario keeps its number
   when it moves between them, which is why the starter regression scenario is `02`: number `01`
   is the reference scenario, and regression starts where reference left off.
-- Gaps are allowed. When a scenario is deleted or moves out of a folder, write one line here
-  saying which number left, where it went, and why. The validator requires this file in any
-  folder whose numbers have a gap.
+- Gaps are allowed. When a scenario is deleted or moves out of a folder, add one line under
+  [Gaps](#gaps) saying which number left, where it went, and why, with the number in backticks,
+  for example "Reference `03` was deleted because the main suite covers it."
+  That section is the only place for those notes, for all three suites; the validator fails on
+  any gap whose number it does not list.
 
 ## Promotion rule
 
@@ -24,6 +26,10 @@ with text that exists only in the skill. It moves to `evals/` only when both hol
 
 A scenario that scores 100 both with and without the skill moves to `evals-regression/`. Run
 `scripts/classify_eval_result.py` on the run JSON to get the recommendation for one scenario.
+
+## Gaps
+
+None yet.
 
 ## Current numbers
 

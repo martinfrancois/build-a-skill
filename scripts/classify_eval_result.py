@@ -1,10 +1,9 @@
 #!/usr/bin/env python3
-"""Classify one hosted eval scenario into main, reference, regression, or fix-required.
+"""Recommend a suite for one hosted eval scenario: main, reference, regression, or fix-required.
 
-The script reads Tessl `eval view --json` output and applies the repository's
-suite policy. It is intentionally conservative: promote to main only when an
-isolated run shows clean with-context behavior and a delta meeting the
-repository main promotion floor.
+Reads `tessl eval view --json` output and applies the promotion rule from evals/NUMBERING.md.
+It promotes to main only when the scenario scores 100 with the skill and the delta to the run
+without the skill meets the floor.
 """
 
 from __future__ import annotations
@@ -14,7 +13,7 @@ import json
 from pathlib import Path
 from typing import Any
 
-from eval_common import error, is_skill_context_dependent, normalized
+from eval_common import error, load_criteria, normalized, skill_context_phrase
 
 # The promotion rule from evals/NUMBERING.md: a delta of at least this many percentage points.
 MAIN_DELTA_FLOOR = 30.0
@@ -22,39 +21,26 @@ MAIN_DELTA_FLOOR = 30.0
 WITH_SKILL_VARIANT = "usage-spec"
 WITHOUT_SKILL_VARIANT = "baseline"
 
+Score = tuple[float, float]
 
-def score(solution: dict[str, Any]) -> tuple[float, float]:
+
+def score(solution: dict[str, Any]) -> Score:
     results = solution.get("assessmentResults") or []
     earned = sum(float(item.get("score") or 0) for item in results)
     maximum = sum(float(item.get("max_score") or 0) for item in results)
     return earned, maximum
 
 
-def scenario_text_from_dir(path: Path | None) -> str:
+def local_scenario(path: Path | None) -> tuple[str, dict[str, Any]]:
+    """Return the local task and criteria wording plus metadata for a scenario folder."""
     if path is None:
-        return ""
-    parts: list[str] = []
-    for name in ("task.md", "criteria.json", "capability.txt"):
-        file_path = path / name
-        if file_path.is_file():
-            parts.append(file_path.read_text(encoding="utf-8"))
-    return "\n".join(parts)
-
-
-def scenario_metadata_from_dir(path: Path | None) -> dict[str, Any]:
-    if path is None:
-        return {}
-    sidecar_path = path / "criteria-meta.json"
-    if not sidecar_path.is_file():
-        return {}
-    try:
-        data = json.loads(sidecar_path.read_text(encoding="utf-8"))
-    except json.JSONDecodeError:
-        return {}
-    metadata = data.get("metadata")
-    if not isinstance(metadata, dict):
-        return {}
-    return metadata
+        return "", {}
+    task = (path / "task.md").read_text(encoding="utf-8") if (path / "task.md").is_file() else ""
+    criteria_file = path / "criteria.json"
+    data, _ = load_criteria(criteria_file) if criteria_file.is_file() else (None, [])
+    if not data:
+        return task, {}
+    return f"{task}\n{json.dumps(data, sort_keys=True)}", data["metadata"]
 
 
 def find_scenario(data: dict[str, Any], query: str | None) -> dict[str, Any]:
@@ -69,70 +55,60 @@ def find_scenario(data: dict[str, Any], query: str | None) -> dict[str, Any]:
         return scenarios[0]
 
     query_norm = normalized(query)
-    matches = []
-    for scenario in scenarios:
-        title = scenario.get("shortDescription") or ""
-        task = scenario.get("task") or ""
-        haystack = normalized(f"{title}\n{task}")
-        if query_norm in haystack:
-            matches.append(scenario)
+    matches = [
+        scenario
+        for scenario in scenarios
+        if query_norm in normalized(f"{scenario.get('shortDescription') or ''}\n{scenario.get('task') or ''}")
+    ]
     if len(matches) != 1:
         raise ValueError(f"expected exactly one scenario match for {query!r}, found {len(matches)}")
     return matches[0]
 
 
-def classify(
-    *,
-    with_score: tuple[float, float] | None,
-    without_score: tuple[float, float] | None,
-    skill_context_dependent: bool,
-) -> tuple[str, str]:
-    if with_score is None:
-        return "fix-required", "with-context result is missing; run with context before classifying"
+def percent(value: Score) -> float | None:
+    earned, maximum = value
+    return 100 * earned / maximum if maximum > 0 else None
 
-    with_earned, with_max = with_score
-    if with_max <= 0:
-        return "fix-required", "with-context max score is zero; scoring did not finish cleanly"
-    with_percent = 100 * with_earned / with_max
 
+def classify(*, with_skill: Score | None, without_skill: Score | None, needs_skill_text: bool) -> tuple[str, str]:
+    if with_skill is None:
+        return "fix-required", "the run with the skill is missing; run it before classifying"
+    with_percent = percent(with_skill)
+    if with_percent is None:
+        return "fix-required", "the run with the skill has a max score of zero; scoring did not finish"
     if with_percent < 100:
-        return (
-            "fix-required",
-            "with-context is below 100%; fix the skill or eval and rerun targeted before choosing a suite",
-        )
-
-    if skill_context_dependent:
-        return (
-            "regression",
-            "skill-context-dependent recall is only fair as with-context regression coverage",
-        )
-
-    if without_score is None:
-        return "reference", "without-context result is missing; run both variants before lift classification"
-
-    without_earned, without_max = without_score
-    if without_max <= 0:
-        return "reference", "without-context max score is zero; baseline scoring did not finish cleanly"
-    without_percent = 100 * without_earned / without_max
-
+        return "fix-required", "below 100 with the skill; fix the skill and rerun this scenario first"
+    if needs_skill_text:
+        return "regression", "it needs the skill's own text, so it is only fair as with-skill regression coverage"
+    if without_skill is None:
+        return "reference", "the run without the skill is missing; run both variants before judging the delta"
+    without_percent = percent(without_skill)
+    if without_percent is None:
+        return "reference", "the run without the skill has a max score of zero; scoring did not finish"
     if without_percent == 100:
-        return "regression", "both variants scored 100%; keep as with-context safety coverage"
-
+        return "regression", "100 with and without the skill; keep it as regression coverage"
     delta = with_percent - without_percent
     if delta >= MAIN_DELTA_FLOOR:
-        return "main", f"clean with-context result and {delta:.1f} pp delta meets main floor {MAIN_DELTA_FLOOR:.1f} pp"
+        return "main", f"100 with the skill and a {delta:.1f} point delta, at or above the {MAIN_DELTA_FLOOR:.0f} point floor"
+    return "reference", f"100 with the skill but a {delta:.1f} point delta, below the {MAIN_DELTA_FLOOR:.0f} point floor"
 
-    return "reference", f"clean with-context result but {delta:.1f} pp delta is below main floor {MAIN_DELTA_FLOOR:.1f} pp"
+
+def fmt(value: Score | None) -> str:
+    if value is None:
+        return "missing"
+    earned, maximum = value
+    share = percent(value)
+    return f"{earned:g}/{maximum:g}" + (f" ({share:.1f}%)" if share is not None else "")
 
 
 def main() -> int:
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument("run_json", type=Path, help="Path to Tessl eval view --json output")
+    parser.add_argument("run_json", type=Path, help="Path to tessl eval view --json output")
     parser.add_argument("--scenario", help="Scenario title, directory name, or distinctive text")
     parser.add_argument(
         "--scenario-dir",
         type=Path,
-        help="Local scenario directory for skill-context-dependent detection",
+        help="Local scenario folder, used to tell whether the scenario needs the skill's own text",
     )
     args = parser.parse_args()
 
@@ -143,37 +119,21 @@ def main() -> int:
         return error(str(exc))
 
     solutions = {solution.get("variant"): score(solution) for solution in scenario.get("solutions", [])}
-    with_score = solutions.get(WITH_SKILL_VARIANT)
-    without_score = solutions.get(WITHOUT_SKILL_VARIANT)
+    with_skill = solutions.get(WITH_SKILL_VARIANT)
+    without_skill = solutions.get(WITHOUT_SKILL_VARIANT)
 
     title = scenario.get("shortDescription") or "(untitled scenario)"
-    task_text = scenario.get("task") or ""
-    local_text = scenario_text_from_dir(args.scenario_dir)
-    local_metadata = scenario_metadata_from_dir(args.scenario_dir)
-    skill_context_dependent = (
-        local_metadata.get("evidence_type") == "skill_context_dependent"
-        or is_skill_context_dependent(f"{title}\n{task_text}\n{local_text}")
+    local_text, local_metadata = local_scenario(args.scenario_dir)
+    needs_skill_text = local_metadata.get("evidence_type") == "skill_context_dependent" or bool(
+        skill_context_phrase(f"{title}\n{scenario.get('task') or ''}\n{local_text}")
     )
-
-    suite, reason = classify(
-        with_score=with_score,
-        without_score=without_score,
-        skill_context_dependent=skill_context_dependent,
-    )
-
-    def fmt(value: tuple[float, float] | None) -> str:
-        if value is None:
-            return "missing"
-        earned, maximum = value
-        if maximum <= 0:
-            return f"{earned:g}/{maximum:g}"
-        return f"{earned:g}/{maximum:g} ({100 * earned / maximum:.1f}%)"
+    suite, reason = classify(with_skill=with_skill, without_skill=without_skill, needs_skill_text=needs_skill_text)
 
     print(f"scenario: {title}")
-    print(f"with-context: {fmt(with_score)}")
-    print(f"without-context: {fmt(without_score)}")
-    print(f"skill-context-dependent: {'yes' if skill_context_dependent else 'no'}")
-    print(f"recommended-suite: {suite}")
+    print(f"with the skill: {fmt(with_skill)}")
+    print(f"without the skill: {fmt(without_skill)}")
+    print(f"needs the skill's own text: {'yes' if needs_skill_text else 'no'}")
+    print(f"recommended suite: {suite}")
     print(f"reason: {reason}")
     return 0
 

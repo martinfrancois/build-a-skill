@@ -3,20 +3,21 @@
 ## How numbers work
 
 - `evals/` scenarios are numbered in the order they entered the main suite. A main number is
-  never reused, so `01` stays `01` even after later scenarios join.
+  never reused.
 - `evals-reference/` and `evals-regression/` share one number space. A scenario keeps its number
-  when it moves between them, which is why the starter regression scenario is `02`: number `01`
-  is the reference scenario, and regression starts where reference left off.
+  when it moves between them, so a regression scenario that came from reference still has its
+  reference number.
 - Gaps are allowed. When a scenario is deleted or moves out of a folder, add one line under
-  [Gaps](#gaps) saying which number left, where it went, and why, with the number in backticks,
-  for example "Reference `03` was deleted because the main suite covers it."
-  That section is the only place for those notes, for all three suites; the validator fails on
-  any gap whose number it does not list.
+  [Gaps](#gaps) that names the suite it left, its number, and what happened, in the form
+  `- evals-reference 03: deleted, the main suite covers it`. The validator fails on any gap
+  without a note for that suite and number, on notes in any other form, and on notes for a
+  number that is in use again.
 
 ## Promotion rule
 
-A new scenario starts in `evals-reference/`, or in `evals-regression/` if it can only be solved
-with text that exists only in the skill. It moves to `evals/` only when both hold:
+New scenarios start in `evals-reference/`. A scenario starts in `evals-regression/` only when it
+needs text that exists only in the skill. A reference scenario moves to `evals-regression/` once
+it scores 100 both with and without the skill, and to `evals/` only when both hold:
 
 1. With the skill, it scores 100. Every scenario in `evals/` must keep scoring 100 with the skill;
    a main scenario that drops below 100 means the skill or the scenario needs fixing before any
@@ -24,7 +25,8 @@ with text that exists only in the skill. It moves to `evals/` only when both hol
 2. Without the skill, it scores at least 30 points lower, so the delta is 30 percentage points or
    more.
 
-A scenario that scores 100 both with and without the skill moves to `evals-regression/`. Run
+Move the folder rather than copy it: a main `task.md` that shares 85% or more of its eight-word
+runs with a reference or regression task fails the validator as a duplicate. Run
 `scripts/classify_eval_result.py` on the run JSON to get the recommendation for one scenario.
 
 ## Gaps
@@ -32,6 +34,9 @@ A scenario that scores 100 both with and without the skill moves to `evals-regre
 None yet.
 
 ## Current numbers
+
+Update this table whenever a scenario is added, moved, or deleted. The validator flags a row whose
+folder no longer exists.
 
 | Suite | Number | Scenario |
 |---|---|---|

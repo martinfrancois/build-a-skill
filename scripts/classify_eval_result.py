@@ -42,6 +42,7 @@ def local_scenario(path: Path | None) -> tuple[str, dict[str, Any]]:
 
 
 def find_scenario(data: dict[str, Any], query: str | None) -> dict[str, Any]:
+    """Pick the scenario whose folder name (the last part of its path) or title and task match."""
     scenarios = data.get("data", {}).get("attributes", {}).get("scenarios", [])
     if not isinstance(scenarios, list):
         raise ValueError("run JSON does not contain data.attributes.scenarios")
@@ -49,9 +50,13 @@ def find_scenario(data: dict[str, Any], query: str | None) -> dict[str, Any]:
         raise ValueError("run JSON contains no scenarios")
     if query is None:
         if len(scenarios) != 1:
-            raise ValueError("run contains multiple scenarios; pass --scenario")
+            raise ValueError("run contains multiple scenarios; pass --scenario or --scenario-dir")
         return scenarios[0]
 
+    folder = query.rstrip("/").split("/")[-1]
+    by_folder = [s for s in scenarios if str(s.get("path") or "").rstrip("/").split("/")[-1] == folder]
+    if len(by_folder) == 1:
+        return by_folder[0]
     query_norm = normalized(query)
     matches = [
         scenario
@@ -102,17 +107,27 @@ def fmt(value: Score | None) -> str:
 def main() -> int:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("run_json", type=Path, help="Path to tessl eval view --json output")
-    parser.add_argument("--scenario", help="Scenario title, directory name, or distinctive text")
+    parser.add_argument(
+        "--scenario",
+        help="Scenario folder name, title, or distinctive task text; defaults to the --scenario-dir name",
+    )
     parser.add_argument(
         "--scenario-dir",
         type=Path,
-        help="Local scenario folder, used to tell whether the scenario needs the skill's own text",
+        help="Local scenario folder: picks the scenario in the run and tells whether it needs the skill's own text",
     )
     args = parser.parse_args()
 
     try:
         data = json.loads(args.run_json.read_text(encoding="utf-8"))
-        scenario = find_scenario(data, args.scenario)
+        query = args.scenario or (args.scenario_dir.resolve().name if args.scenario_dir else None)
+        try:
+            scenario = find_scenario(data, query)
+        except ValueError:
+            # A one-scenario run is the scenario, even when its path does not name the folder.
+            if args.scenario or len(data.get("data", {}).get("attributes", {}).get("scenarios") or []) != 1:
+                raise
+            scenario = find_scenario(data, None)
     except (OSError, json.JSONDecodeError, ValueError) as exc:
         return error(str(exc))
 

@@ -2,50 +2,34 @@
 
 ## Scope
 
-Day-to-day work in this repository: changing the skill or evals, validating, committing, and
-opening pull requests.
+Changing the `build-a-skill` skill, its references, or the template it copies.
 
 ## Rules
 
-- Before a change, state its goal as something a run can confirm, for example "scenario 01
-  scores 100 with the skill and at most 70 without". A change without a measurable goal has no
-  way to finish.
-- Before committing changes to the skill, evals, or scripts, run the local checks. They are free:
+- The skill is written for an agent that has just produced the result the user wanted and is
+  told to turn the conversation into a skill. Every step must be doable by Claude Code and Codex
+  with their ordinary tools, and must say what to do when another agent lacks something (ask
+  the user). Agent-specific paths and commands live only in `references/transcripts.md` and
+  `references/replay-and-prove.md`.
+- The skill never guesses where the story started: when the first prompt cannot be found, it
+  asks the user, as `references/transcripts.md` says. Keep that rule.
+- Keep `SKILL.md` under about 120 lines; detail goes to `references/`. The description is the
+  trigger: third person, what it does, then the situations and the words a user would type.
+- The template under `assets/template/` is a complete repository: its own `README.md`,
+  `AGENTS.md` rules under `docs/agents/`, three example scenarios, the scripts, and the
+  manifests. A change to how a produced repository should work goes into the template, not into
+  the skill text.
+- Local checks before committing, all free:
 
   ```bash
-  python3 scripts/validate_eval_criteria.py evals evals-reference evals-regression
-  python3 -m py_compile scripts/*.py
-  bash -n scripts/*.sh
   tessl skill lint .
   tessl plugin lint .
-  for suite in evals evals-reference evals-regression; do tessl eval lint "$suite"; done
+  python3 -m py_compile skills/build-a-skill/assets/template/scripts/*.py
+  bash -n skills/build-a-skill/assets/template/scripts/*.sh
+  (cd skills/build-a-skill/assets/template && python3 scripts/validate_eval_criteria.py evals evals-reference evals-regression)
+  (cd skills/build-a-skill/assets/template && for suite in evals evals-reference evals-regression; do tessl eval lint "$suite"; done)
   ```
 
-- Hosted runs cost Tessl credits. Spend them in this order and stop at the first stage that is
-  not clean:
-  1. Quality review at 100:
-     `tessl review run --threshold 100 skills/my-skill/SKILL.md`. Fix every finding before any
-     eval run.
-  2. Freeze the skill text. Every run measures the exact `SKILL.md` and references it was given,
-     so finish the wording first and do a local read of each affected `task.md` and
-     `criteria.json` against it.
-  3. Targeted runs of the scenarios the change affects:
-     `scripts/run_eval_suite.sh <suite> <scenario-name>`.
-  4. The full main suite, then reference, then regression:
-     `scripts/run_eval_suite.sh main`, `reference`, `regression`.
-- Any edit to `SKILL.md` or a file under `skills/my-skill/references/` invalidates every earlier
-  run. Results from before the edit are history, not evidence for the current text.
-- A with-skill score below 100 sends you back to stage 3 for that scenario only, after fixing
-  the skill. Do not rerun a broad suite to fix one scenario.
-- If a hosted run looks stuck, keep polling it with `tessl eval view <run-id>`. Scoring can lag
-  behind execution. Rerun only after a scored failure and a fix.
-- Commits and pull request titles use Conventional Commits: `fix(skill)` or `feat(skill)` for
-  runtime skill text, `test(evals)` for adding or moving scenarios, `fix(evals)` for correcting
-  an unfair task or criterion, `docs` for text that changes neither.
-- Put any change that can move a score (skill text, references, active tasks, criteria, or
-  suite membership) in its own commit, so it can be reverted alone.
-
-## References
-
-- [Eval Guidance](evals.md)
-- [Skill Behavior](skill-behavior.md)
+- Commits and pull request titles use Conventional Commits: `feat(skill)` or `fix(skill)` for
+  the skill text and references, `feat(template)` or `fix(template)` for the template, `docs`
+  for text that changes neither.

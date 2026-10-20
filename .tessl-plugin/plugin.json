@@ -1,10 +1,10 @@
 {
-  "name": "martinfrancois/my-skill",
+  "name": "martinfrancois/build-a-skill",
   "version": "0.1.0",
-  "description": "Help AI coding agents write and review error messages that follow one team convention and never leak secrets.",
-  "summary": "Help AI coding agents write and review error messages that follow one team convention and never leak secrets.",
-  "repository": "https://github.com/martinfrancois/skill-starter",
-  "homepage": "https://github.com/martinfrancois/skill-starter#readme",
+  "description": "An Agent Skill that builds a skill with evals out of the conversation in which the agent finally got it right.",
+  "summary": "An Agent Skill that builds a skill with evals out of the conversation in which the agent finally got it right.",
+  "repository": "https://github.com/martinfrancois/build-a-skill",
+  "homepage": "https://github.com/martinfrancois/build-a-skill#readme",
   "license": "MIT",
   "entrypoint": "README.md",
   "private": false

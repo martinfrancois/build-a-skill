@@ -1,0 +1,4 @@
+interface:
+  display_name: "Build a Skill"
+  short_description: "Turn this conversation's corrections into a skill"
+  default_prompt: "Use $build-a-skill now that the result is the way I want it: build a skill with evals from this conversation, replay the first prompt with it, and prove it."

@@ -13,6 +13,8 @@ import sys
 from pathlib import Path
 from typing import Any
 
+from eval_common import error, is_skill_context_dependent, normalized, normalized_words
+
 
 def detect_skill_name() -> str:
     """Return the skill under test: $SKILL_NAME, or the only folder in skills/."""
@@ -88,25 +90,30 @@ ANSWER_KEY_MARKERS = (
     "uplift",
     "answer key",
 )
-COMPILE_WORDS = ("compile", "compiles", "coherent", "artifact", "creates")
+# A main implementation scenario needs one check that the requested file exists and one that the
+# requested behavior is preserved; these words in a check's name or description mark them.
+ARTIFACT_WORDS = ("artifact", "creates", "compiles", "coherent")
 BEHAVIOR_WORDS = (
     "behavior",
     "preserve",
     "exact",
     "return",
     "returns",
+    "raise",
+    "raises",
     "exception",
-    "prompt",
     "output",
     "order",
-    "lazy",
-    "laziness",
-    "side effect",
-    "fallback",
-    "parse",
-    "redact",
 )
-CRITERION_CATEGORIES = {"safety", "quality", "maintainability"}
+# Runtime-reference prose that shares a run of this many words with a scenario's task, capability,
+# or criteria counts as overlap. Five words catch a copied phrase without flagging common pairs.
+PHRASE_WORDS = 5
+# Every scenario scores exactly these points per category, 100 in total.
+CATEGORY_POINTS = {"safety": 15, "quality": 80, "maintainability": 5}
+CRITERION_CATEGORIES = set(CATEGORY_POINTS)
+MAIN_SUITE = "evals"
+SHARED_NUMBER_SUITES = ("evals-reference", "evals-regression")
+NUMBERING_FILE = Path(MAIN_SUITE) / "NUMBERING.md"
 EVIDENCE_TYPES = {
     "ordinary_lift",
     "focused_main",
@@ -116,10 +123,10 @@ EVIDENCE_TYPES = {
 }
 REGRESSION_EVIDENCE_TYPES = {"solved_regression", "skill_context_dependent"}
 INTERNAL_LABEL_ALLOW_PATTERNS = (
-    r"\bdo not deduct\b.{0,120}\b(?:hard[- ]stop|checklist|scan|marker|skill)\b",
-    r"\baward full credit\b.{0,120}\b(?:hard[- ]stop|checklist|scan|marker|skill)\b",
-    r"\ballow(?:s|ed)?\b.{0,120}\b(?:hard[- ]stop|checklist|scan|marker|skill)\b",
-    r"\bbrief(?:ly)? uses\b.{0,120}\b(?:hard[- ]stop|checklist|scan|marker|skill)\b",
+    r"\bdo not deduct\b.{0,120}\b(?:hard[- ]stop|checklist|skill)\b",
+    r"\baward full credit\b.{0,120}\b(?:hard[- ]stop|checklist|skill)\b",
+    r"\ballow(?:s|ed)?\b.{0,120}\b(?:hard[- ]stop|checklist|skill)\b",
+    r"\bbrief(?:ly)? uses\b.{0,120}\b(?:hard[- ]stop|checklist|skill)\b",
 )
 EXPLICIT_INVOCATION_PATTERNS = (
     rf"\${re.escape(SKILL_NAME)}\b",
@@ -143,13 +150,10 @@ AGENT_DOC_FORBIDDEN_EXTERNAL_HISTORY_PATTERNS = (
 )
 
 
-def error(message: str) -> int:
-    print(f"error: {message}", file=sys.stderr)
-    return 1
-
-
-def scenario_dirs(paths: list[Path]) -> list[Path]:
+def scenario_dirs(paths: list[Path]) -> tuple[list[Path], list[str]]:
+    """Return the scenario folders under the given paths, plus notes about missing suites."""
     dirs: list[Path] = []
+    notes: list[str] = []
     for path in paths:
         if path.is_file() and path.name == "criteria.json":
             dirs.append(path.parent)
@@ -159,9 +163,11 @@ def scenario_dirs(paths: list[Path]) -> list[Path]:
             else:
                 children = sorted(child for child in path.iterdir() if child.is_dir())
                 dirs.extend(children)
+        elif path.name in (MAIN_SUITE, *SHARED_NUMBER_SUITES):
+            notes.append(f"{path}/ does not exist; treating it as an empty suite")
         else:
-            raise FileNotFoundError(path)
-    return sorted(dict.fromkeys(dirs))
+            raise FileNotFoundError(f"path not found: {path}")
+    return sorted(dict.fromkeys(dirs)), notes
 
 
 def load_json(path: Path) -> tuple[dict[str, Any] | None, list[str]]:
@@ -236,18 +242,16 @@ def text_of(item: dict[str, Any]) -> str:
     return f"{item.get('name', '')} {item.get('description', '')}".lower()
 
 
-def normalized_words(text: str) -> list[str]:
-    return re.findall(r"[a-z0-9]+", text.lower())
-
-
-def normalized_text(text: str) -> str:
-    return " ".join(normalized_words(text))
-
-
 def ngrams(words: list[str], size: int) -> set[tuple[str, ...]]:
     if len(words) < size:
         return set()
     return {tuple(words[index : index + size]) for index in range(len(words) - size + 1)}
+
+
+def prose_text(text: str) -> str:
+    """Return text with fenced and inline code removed."""
+    without_blocks = re.sub(r"```.*?```", " ", text, flags=re.DOTALL)
+    return re.sub(r"`[^`\n]+`", " ", without_blocks)
 
 
 def code_like_text(text: str) -> str:
@@ -286,53 +290,14 @@ def domain_identifiers(text: str) -> set[str]:
 
 
 def api_markers(text: str) -> set[str]:
-    markers = set(
-        re.findall(
-            r"\b[A-Z][A-Za-z0-9_]*(?:\.[A-Za-z_][A-Za-z0-9_]*)+\b"
-            r"|\b[A-Za-z_][A-Za-z0-9_]*::[A-Za-z_][A-Za-z0-9_]*\b",
-            text,
-        )
-    )
-    return {marker for marker in markers if marker not in {"System.out"}}
+    return set(re.findall(r"\b[A-Z][A-Za-z0-9_]*(?:\.[A-Za-z_][A-Za-z0-9_]*)+\b", text))
 
 
-def is_skill_context_dependent_text(text: str) -> bool:
-    lowered = text.lower()
-    context_terms = (
-        "skill bundle",
-        "skill package",
-        "skill-provided",
-        "skill-only context",
-        "agent instructions",
-        "from the skill",
-        "from the skill bundle",
-        "bundled reference",
-        "bundled reference text",
-        "exact skill-provided text",
-        "exact wording",
-        "exact text",
-        "exact scan",
-        "exact scan header",
-        "exact checklist",
-        "exact procedure",
-        "exact command",
-        "scan command from the skill",
-    )
-    required_terms = (
-        "exact",
-        "skill-provided",
-        "skill-only context",
-        "skill package",
-        "agent instructions",
-        "from the skill",
-        "bundled reference",
-    )
-    return any(term in lowered for term in context_terms) and any(
-        term in lowered for term in required_terms
-    )
+def format_category_points() -> str:
+    return ", ".join(f"{points} {category}" for category, points in CATEGORY_POINTS.items())
 
 
-def validate_scenario(scenario: Path, main_eval_root: Path | None) -> list[str]:
+def validate_scenario(scenario: Path) -> list[str]:
     failures: list[str] = []
     task_file = scenario / "task.md"
     criteria_file = scenario / "criteria.json"
@@ -363,17 +328,19 @@ def validate_scenario(scenario: Path, main_eval_root: Path | None) -> list[str]:
         and isinstance(context, str)
         and context.startswith("Main eval")
     ):
-        failures.append(f"{criteria_file}: reference/regression scenario context must not start with 'Main eval'")
+        failures.append(
+            f"{criteria_file}: context starts with 'Main eval' but the scenario is in "
+            f"{scenario.parent.name}/; start it with 'Reference coverage' or 'Regression coverage'"
+        )
 
     checklist = data.get("checklist")
     if not isinstance(checklist, list) or not checklist:
         failures.append(f"{criteria_file}: checklist must be a non-empty array")
         checklist = []
 
-    is_main_eval = main_eval_root is not None and scenario.parent.resolve() == main_eval_root.resolve()
+    is_main_eval = scenario.parent.name == MAIN_SUITE
     names: set[str] = set()
-    total_score = 0
-    compile_score = 0
+    artifact_score = 0
     behavior_score = 0
     category_scores = {category: 0 for category in CRITERION_CATEGORIES}
     for index, item in enumerate(checklist, start=1):
@@ -400,19 +367,20 @@ def validate_scenario(scenario: Path, main_eval_root: Path | None) -> list[str]:
                 f"{criteria_file}: checklist item {index} has unsupported category {category!r}; "
                 f"use one of {sorted(CRITERION_CATEGORIES)}"
             )
-        if is_main_eval and category not in CRITERION_CATEGORIES:
-            failures.append(
-                f"{criteria_file}: main eval checklist item {index} needs category "
-                f"safety, quality, or maintainability"
-            )
-        total_score += max_score
         if category in category_scores:
             category_scores[category] += max_score
         haystack = text_of(item)
-        if any(word in haystack for word in COMPILE_WORDS):
-            compile_score += max_score
+        if any(word in haystack for word in ARTIFACT_WORDS):
+            artifact_score += max_score
         if any(word in haystack for word in BEHAVIOR_WORDS):
             behavior_score += max_score
+
+    for category, points in CATEGORY_POINTS.items():
+        if category_scores[category] != points:
+            failures.append(
+                f"{criteria_file}: {category} checks total {category_scores[category]} points; "
+                f"every scenario needs exactly {points} ({format_category_points()})"
+            )
 
     task_text = task_file.read_text(encoding="utf-8") if task_file.is_file() else ""
     metadata = data.get("metadata")
@@ -436,7 +404,7 @@ def validate_scenario(scenario: Path, main_eval_root: Path | None) -> list[str]:
             "solved_regression or skill_context_dependent"
         )
     scenario_text = f"{scenario.name}\n{task_text}\n{json.dumps(data, sort_keys=True)}"
-    detected_skill_context = is_skill_context_dependent_text(scenario_text)
+    detected_skill_context = is_skill_context_dependent(scenario_text)
     if evidence_type == "skill_context_dependent" and scenario.parent.name != "evals-regression":
         failures.append(
             f"{criteria_file}: metadata.evidence_type=skill_context_dependent must live in evals-regression"
@@ -486,14 +454,16 @@ def validate_scenario(scenario: Path, main_eval_root: Path | None) -> list[str]:
         failures.append(f"{criteria_file}: explicit scenario task does not invoke the skill")
 
     if is_main_eval and task_type == "implementation":
-        if compile_score <= 0:
-            failures.append(f"{criteria_file}: main eval implementation scenario needs compile/artifact criteria")
+        if artifact_score <= 0:
+            failures.append(
+                f"{criteria_file}: main implementation scenario needs a check that the requested "
+                f"file is created; name or describe it with one of {list(ARTIFACT_WORDS)}"
+            )
         if behavior_score <= 0:
-            failures.append(f"{criteria_file}: main eval implementation scenario needs behavior criteria")
-        if category_scores["quality"] <= 0:
-            failures.append(f"{criteria_file}: main eval implementation scenario needs quality criteria")
-    elif is_main_eval and task_type == "cleanup" and category_scores["quality"] <= 0:
-        failures.append(f"{criteria_file}: main eval cleanup scenario needs quality criteria")
+            failures.append(
+                f"{criteria_file}: main implementation scenario needs a behavior check; name or "
+                f"describe it with one of {list(BEHAVIOR_WORDS)}"
+            )
 
     return failures
 
@@ -529,7 +499,7 @@ def validate_runtime_reference_overlap(dirs: list[Path]) -> list[str]:
         path.read_text(encoding="utf-8") for path in sorted(references_root.glob("*.md"))
     )
     runtime_identifiers = domain_identifiers(runtime_text)
-    runtime_grams = ngrams(normalized_words(runtime_text), 12)
+    runtime_phrases = ngrams(normalized_words(prose_text(runtime_text)), PHRASE_WORDS)
     runtime_api_markers = api_markers(runtime_text)
 
     for scenario in dirs:
@@ -542,23 +512,33 @@ def validate_runtime_reference_overlap(dirs: list[Path]) -> list[str]:
             continue
         task_text = task_file.read_text(encoding="utf-8")
         metadata: dict[str, Any] = {}
+        # Criteria wording counts too: a reference that repeats a check's phrasing teaches the
+        # answer even when the task itself shares nothing.
+        scenario_prose = prose_text(task_text)
+        capability_file = scenario / "capability.txt"
+        if capability_file.exists():
+            scenario_prose += "\n" + capability_file.read_text(encoding="utf-8")
         if criteria_file.exists():
             data, _ = load_criteria(criteria_file)
             if isinstance(data, dict) and isinstance(data.get("metadata"), dict):
                 metadata = data["metadata"]
+            if isinstance(data, dict):
+                scenario_prose += "\n" + str(data.get("context", ""))
+                for item in data.get("checklist") or []:
+                    if isinstance(item, dict):
+                        scenario_prose += "\n" + text_of(item)
 
         task_identifiers = domain_identifiers(task_text)
         shared_identifiers = sorted(task_identifiers & runtime_identifiers)
-        task_words = normalized_words(task_text)
-        task_grams = ngrams(task_words, 12)
-        long_overlap_count = len(task_grams & runtime_grams)
+        shared_phrases = sorted(
+            " ".join(gram)
+            for gram in ngrams(normalized_words(scenario_prose), PHRASE_WORDS) & runtime_phrases
+        )
         shared_api_markers = sorted(api_markers(task_text) & runtime_api_markers)
         has_distinctive_api_overlap = bool(shared_api_markers) and len(shared_identifiers) >= 2
 
         has_overlap = (
-            len(shared_identifiers) >= 4
-            or (len(shared_identifiers) >= 3 and long_overlap_count)
-            or has_distinctive_api_overlap
+            len(shared_identifiers) >= 4 or bool(shared_phrases) or has_distinctive_api_overlap
         )
         if not has_overlap:
             continue
@@ -568,7 +548,8 @@ def validate_runtime_reference_overlap(dirs: list[Path]) -> list[str]:
         has_overlap_rationale = isinstance(rationale, str) and bool(rationale.strip())
         overlap_details = (
             f"shared identifiers: {', '.join(shared_identifiers[:12]) or '(none)'}; "
-            f"shared API markers: {', '.join(shared_api_markers[:12]) or '(none)'}"
+            f"shared API markers: {', '.join(shared_api_markers[:12]) or '(none)'}; "
+            f"shared phrases: {'; '.join(shared_phrases[:6]) or '(none)'}"
         )
 
         if evidence_type == "ordinary_lift":
@@ -640,9 +621,6 @@ def validate_runtime_references() -> list[str]:
         for marker in ANSWER_KEY_MARKERS:
             if marker.lower() in text.lower():
                 failures.append(f"{path}: runtime reference contains answer-key marker {marker!r}")
-    legacy = SKILL_ROOT / "evals" / "evals.json"
-    if legacy.exists():
-        failures.append(f"{legacy}: eval files must not live inside the skill folder")
     return failures
 
 
@@ -663,106 +641,93 @@ def validate_agent_docs_self_contained() -> list[str]:
     return failures
 
 
-def validate_numbering(root: Path) -> list[str]:
-    failures: list[str] = []
-    if not root.exists():
-        return failures
-    numbers: dict[int, str] = {}
-    documented_gap = root / "NUMBERING.md"
+def suite_numbers(suite: str) -> dict[int, list[str]]:
+    numbers: dict[int, list[str]] = {}
+    root = Path(suite)
+    if not root.is_dir():
+        return numbers
     for scenario in sorted(child for child in root.iterdir() if child.is_dir()):
         match = re.match(r"^(\d+)-", scenario.name)
-        if not match:
+        if match:
+            numbers.setdefault(int(match.group(1)), []).append(f"{suite}/{scenario.name}")
+    return numbers
+
+
+def validate_numbering() -> list[str]:
+    """Check the rule in evals/NUMBERING.md.
+
+    evals/ has its own number space; evals-reference/ and evals-regression/ share one, so a
+    scenario keeps its number when it moves between them. Every gap is listed under the
+    "## Gaps" heading of NUMBERING.md as a number in backticks, such as `03`.
+    """
+    failures: list[str] = []
+    documented = set()
+    if NUMBERING_FILE.is_file():
+        numbering_text = NUMBERING_FILE.read_text(encoding="utf-8")
+        gaps = re.search(r"^## Gaps\n(.*?)(?=^## |\Z)", numbering_text, re.MULTILINE | re.DOTALL)
+        if gaps:
+            documented = {int(number) for number in re.findall(r"`(\d{2,})`", gaps.group(1))}
+    spaces = {
+        MAIN_SUITE: suite_numbers(MAIN_SUITE),
+        " and ".join(SHARED_NUMBER_SUITES): {},
+    }
+    for suite in SHARED_NUMBER_SUITES:
+        for number, names in suite_numbers(suite).items():
+            spaces[" and ".join(SHARED_NUMBER_SUITES)].setdefault(number, []).extend(names)
+    for space, numbers in spaces.items():
+        for number, names in sorted(numbers.items()):
+            if len(names) > 1:
+                failures.append(f"{space}: number {number:02d} is used twice: {', '.join(names)}")
+        if not numbers:
             continue
-        number = int(match.group(1))
-        if number in numbers:
-            failures.append(f"{root}: duplicate scenario number {number:02d}: {numbers[number]}, {scenario.name}")
-        numbers[number] = scenario.name
-    if numbers and not documented_gap.exists():
-        all_numbers = sorted(numbers)
-        expected = set(range(all_numbers[0], all_numbers[-1] + 1))
-        missing = sorted(expected - set(all_numbers))
+        missing = sorted(set(range(1, max(numbers) + 1)) - set(numbers) - documented)
         if missing:
-            failures.append(f"{root}: numbering gap(s) {missing}; add NUMBERING.md if intentional")
+            listed = ", ".join(f"`{number:02d}`" for number in missing)
+            failures.append(
+                f"{space}: numbering gap at {listed}; add a line under '## Gaps' in "
+                f"{NUMBERING_FILE} saying which scenario left and why, with the number in backticks"
+            )
     return failures
 
 
 def main() -> int:
     if len(sys.argv) < 2:
-        return error("usage: validate_eval_criteria.py <eval-directory-or-criteria.json> [...]")
+        return error("usage: validate_eval_criteria.py <suite-folder-or-criteria.json> [...]")
 
     paths = [Path(arg) for arg in sys.argv[1:]]
     try:
-        dirs = scenario_dirs(paths)
+        dirs, notes = scenario_dirs(paths)
     except FileNotFoundError as exc:
-        return error(f"path not found: {exc.filename}")
+        return error(str(exc))
+    for note in notes:
+        print(f"note: {note}", file=sys.stderr)
     if not dirs:
-        return error("no scenario directories found")
+        return error(
+            f"no scenario folders in {', '.join(str(path) for path in paths)}; add one with "
+            "task.md, capability.txt, criteria.json, and criteria-meta.json (README step 4)"
+        )
 
-    main_eval_root = Path("evals") if Path("evals").exists() else None
     failures: list[str] = []
     invocations: dict[str, int] = {"natural": 0, "explicit": 0}
+    main_invocations: dict[str, int] = {"natural": 0, "explicit": 0}
     for scenario in dirs:
-        failures.extend(validate_scenario(scenario, main_eval_root))
+        failures.extend(validate_scenario(scenario))
         criteria = scenario / "criteria.json"
         if criteria.exists():
             data, _ = load_criteria(criteria)
-            if data and isinstance(data.get("metadata"), dict):
-                invocation = data["metadata"].get("invocation")
-                if invocation in invocations:
-                    invocations[invocation] += 1
+            invocation = data["metadata"].get("invocation") if data else None
+            if invocation in invocations:
+                invocations[invocation] += 1
+                if scenario.parent.name == MAIN_SUITE:
+                    main_invocations[invocation] += 1
 
-    if main_eval_root and any(path.resolve() == main_eval_root.resolve() for path in paths if path.exists()):
-        main_eval_dirs = [d for d in dirs if d.parent.resolve() == main_eval_root.resolve()]
-        main_eval_invocations = {"natural": 0, "explicit": 0}
-        main_eval_category_scores = {category: 0 for category in CRITERION_CATEGORIES}
-        for scenario in main_eval_dirs:
-            data, _ = load_criteria(scenario / "criteria.json")
-            if data and isinstance(data.get("metadata"), dict):
-                invocation = data["metadata"].get("invocation")
-                if invocation in main_eval_invocations:
-                    main_eval_invocations[invocation] += 1
-            if data and isinstance(data.get("checklist"), list):
-                for item in data["checklist"]:
-                    if not isinstance(item, dict):
-                        continue
-                    category = item.get("category")
-                    max_score = item.get("max_score")
-                    if category in main_eval_category_scores and isinstance(max_score, int):
-                        main_eval_category_scores[category] += max_score
-        # One scenario cannot cover both styles; from the second scenario on, the set must.
-        if len(main_eval_dirs) >= 2 and not all(main_eval_invocations.values()):
-            failures.append(
-                "evals: main eval set must include both natural and explicit invocation scenarios"
-            )
-        main_eval_total = sum(main_eval_category_scores.values())
-        if main_eval_total:
-            quality = main_eval_category_scores["quality"]
-            safety = main_eval_category_scores["safety"]
-            maintainability = main_eval_category_scores["maintainability"]
-            if quality < main_eval_total * 0.8:
-                failures.append(
-                    "evals: main eval set should be primarily quality scoring "
-                    f"({quality}/{main_eval_total})"
-                )
-            if safety < main_eval_total * 0.05:
-                failures.append(
-                    "evals: main eval set needs enough safety-check scoring for compile/behavior "
-                    f"({safety}/{main_eval_total})"
-                )
-            if maintainability < main_eval_total * 0.05:
-                failures.append(
-                    "evals: main eval set needs enough maintainability scoring "
-                    f"({maintainability}/{main_eval_total})"
-                )
-            if maintainability > main_eval_total * 0.15:
-                failures.append(
-                    "evals: main eval maintainability scoring should not obscure skill behavior "
-                    f"({maintainability}/{main_eval_total})"
-                )
+    # One scenario cannot cover both styles; from the second main scenario on, the set must.
+    if sum(main_invocations.values()) >= 2 and not all(main_invocations.values()):
+        failures.append(
+            f"{MAIN_SUITE}: the main suite must include both natural and explicit invocation scenarios"
+        )
 
-    for path in paths:
-        if path.is_dir():
-            failures.extend(validate_numbering(path))
+    failures.extend(validate_numbering())
     failures.extend(validate_cross_suite_duplicates(dirs))
     failures.extend(validate_runtime_reference_overlap(dirs))
     failures.extend(validate_scenario_path_references())

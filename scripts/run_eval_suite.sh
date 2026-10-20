@@ -130,7 +130,20 @@ run_staged_evals() {
   )
 }
 
+# Exits when a suite folder holds no scenario folder, before tessl is called.
+require_scenarios() {
+  local scenario
+  for scenario in "$1"/*/; do
+    if [[ -d "$scenario" ]]; then
+      return 0
+    fi
+  done
+  echo "No scenarios found in $1" >&2
+  exit 1
+}
+
 if [[ "$suite" == "main" && "${#scenarios[@]}" -eq 0 ]]; then
+  require_scenarios "$source_path"
   echo "Running the main eval suite."
   run_staged_evals
   exit 0
@@ -156,15 +169,12 @@ for requested in ${scenarios[@]+"${scenarios[@]}"}; do
   scenario_names+=("$name")
 done
 if [[ "${#scenario_names[@]}" -eq 0 ]]; then
+  require_scenarios "$source_path"
   for scenario in "$source_path"/*/; do
     if [[ -d "$scenario" ]]; then
       scenario_names+=("$(basename "$scenario")")
     fi
   done
-  if [[ "${#scenario_names[@]}" -eq 0 ]]; then
-    echo "No scenarios found in $source_path" >&2
-    exit 1
-  fi
 fi
 
 # Stage the requested scenarios in evals/ and restore the original folder on exit.

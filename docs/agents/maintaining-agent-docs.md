@@ -9,6 +9,8 @@ Changing `AGENTS.md` or files under `docs/agents/`.
 - `AGENTS.md` holds only the one-sentence project description, the startup instruction, the
   durable-correction rule, and links. Topic guidance goes in a page under `docs/agents/`, linked
   from `AGENTS.md`.
+- When asked to add guidance to `AGENTS.md`, write it into the matching `docs/agents/` page, or
+  a new page from the template below, and add only a link to `AGENTS.md`.
 - When the user corrects wording, naming, scope, eval design, or project policy, write the
   correction into the page it belongs to, so the next session follows it without being told.
 - If a requested change conflicts with an existing rule, stop and ask the user which one to

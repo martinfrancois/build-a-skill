@@ -95,6 +95,8 @@ fi
 
 repo_root="$(git rev-parse --show-toplevel 2>/dev/null || pwd)"
 source_path="$repo_root/$source_dir"
+# Tessl reads scenarios from evals/ only.
+staged_evals="$repo_root/evals"
 if [[ ! -d "$source_path" ]]; then
   echo "Missing suite directory: $source_path" >&2
   exit 1
@@ -114,7 +116,7 @@ fi
 run_staged_evals() {
   local scenario
   echo "Scenarios:"
-  for scenario in "$repo_root/evals"/*/; do
+  for scenario in "$staged_evals"/*/; do
     if [[ -d "$scenario" ]]; then
       printf '  %s\n' "$(basename "$scenario")"
     fi
@@ -165,10 +167,9 @@ if [[ "${#scenario_names[@]}" -eq 0 ]]; then
   fi
 fi
 
-# Tessl reads scenarios from evals/, so stage the requested ones there and restore it on exit.
+# Stage the requested scenarios in evals/ and restore the original folder on exit.
 tmp_dir="$(mktemp -d)"
 backup_evals="$tmp_dir/evals-original"
-staged_evals="$repo_root/evals"
 if [[ "$suite" == "main" ]]; then
   source_path="$backup_evals"
 fi

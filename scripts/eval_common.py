@@ -14,14 +14,21 @@ REGRESSION_SUITE = "evals-regression"
 SUITES = (MAIN_SUITE, REFERENCE_SUITE, REGRESSION_SUITE)
 SIDECAR_NAME = "criteria-meta.json"
 
-# Phrases that say a scenario needs the skill's own text to be solved. A scenario that uses one is
-# only fair as with-skill regression coverage. docs/agents/evals.md lists the same phrases.
+INVOCATIONS = ("natural", "explicit")
+TASK_TYPES = ("implementation", "cleanup", "review")
+
+# Phrases that say a scenario needs the skill's own text to be solved. A scenario whose task or
+# criteria wording (see scenario_wording) uses one is only fair as with-skill regression coverage.
+# docs/agents/evals.md lists the same phrases.
 SKILL_CONTEXT_PHRASES = (
     "skill bundle",
     "the skill's",
     "as the skill says",
     "from the skill",
     "bundled",
+)
+SKILL_CONTEXT_PATTERNS = tuple(
+    (phrase, re.compile(rf"\b{re.escape(phrase)}\b", re.IGNORECASE)) for phrase in SKILL_CONTEXT_PHRASES
 )
 
 
@@ -39,9 +46,20 @@ def normalized(text: str) -> str:
 
 
 def skill_context_phrase(text: str) -> str | None:
-    """Return the first phrase that marks the text as needing the skill's own words, if any."""
-    lowered = text.lower()
-    return next((phrase for phrase in SKILL_CONTEXT_PHRASES if phrase in lowered), None)
+    """Return the first phrase, as a whole word, that marks the text as needing the skill's words."""
+    return next((phrase for phrase, pattern in SKILL_CONTEXT_PATTERNS if pattern.search(text)), None)
+
+
+def checklist_items(data: dict[str, Any] | None) -> list[dict[str, Any]]:
+    checklist = data.get("checklist") if data else None
+    return [item for item in checklist if isinstance(item, dict)] if isinstance(checklist, list) else []
+
+
+def scenario_wording(task_text: str, data: dict[str, Any] | None) -> str:
+    """Return task.md plus the criteria context and every check's name and description."""
+    parts = [task_text, str(data.get("context", "")) if data else ""]
+    parts.extend(f"{item.get('name', '')} {item.get('description', '')}" for item in checklist_items(data))
+    return "\n".join(parts)
 
 
 def load_json(path: Path) -> tuple[dict[str, Any] | None, list[str]]:
@@ -55,21 +73,19 @@ def load_json(path: Path) -> tuple[dict[str, Any] | None, list[str]]:
 
 
 def load_criteria(criteria_file: Path) -> tuple[dict[str, Any] | None, list[str]]:
-    """Load criteria.json and merge the repository metadata kept in criteria-meta.json.
+    """Load criteria.json and merge in criteria-meta.json from the same folder.
 
     Tessl's schema for criteria.json is context, type, and checklist items with name,
     description, and max_score. Everything this repository adds (invocation, task type,
-    evidence type, per-item categories) lives in criteria-meta.json next to it, so
-    `tessl eval lint` stays clean. The merged view is what every check reads.
+    evidence type, per-item categories) lives in criteria-meta.json, so `tessl eval lint`
+    stays clean. The merged view is what every check reads.
     """
     data, failures = load_json(criteria_file)
     if data is None:
         return None, failures
     if "metadata" in data:
         failures.append(f"{criteria_file}: move the metadata object to {SIDECAR_NAME}")
-    checklist = data.get("checklist")
-    items = [item for item in checklist if isinstance(item, dict)] if isinstance(checklist, list) else []
-    if any("category" in item for item in items):
+    if any("category" in item for item in checklist_items(data)):
         failures.append(f"{criteria_file}: move checklist categories to {SIDECAR_NAME}")
     data["metadata"] = {}
     sidecar_file = criteria_file.with_name(SIDECAR_NAME)
@@ -78,8 +94,14 @@ def load_criteria(criteria_file: Path) -> tuple[dict[str, Any] | None, list[str]
         return data, failures
     sidecar, sidecar_failures = load_json(sidecar_file)
     failures.extend(sidecar_failures)
-    if sidecar is None:
-        return data, failures
+    if sidecar is not None:
+        failures.extend(merge_sidecar(data, sidecar, sidecar_file))
+    return data, failures
+
+
+def merge_sidecar(data: dict[str, Any], sidecar: dict[str, Any], sidecar_file: Path) -> list[str]:
+    """Copy metadata and per-check categories from criteria-meta.json into the criteria data."""
+    failures: list[str] = []
     unknown = sorted(set(sidecar) - {"metadata", "categories"})
     if unknown:
         failures.append(f"{sidecar_file}: unknown keys {unknown}; use metadata and categories")
@@ -91,8 +113,8 @@ def load_criteria(criteria_file: Path) -> tuple[dict[str, Any] | None, list[str]
     if not isinstance(categories, dict):
         failures.append(f"{sidecar_file}: categories must map checklist names to categories")
         categories = {}
-    names = {str(item.get("name")) for item in items}
-    for name in sorted(set(categories) - names):
+    items = checklist_items(data)
+    for name in sorted(set(categories) - {str(item.get("name")) for item in items}):
         failures.append(f"{sidecar_file}: category for unknown checklist item {name!r}")
     for item in items:
         category = categories.get(str(item.get("name")))
@@ -101,4 +123,4 @@ def load_criteria(criteria_file: Path) -> tuple[dict[str, Any] | None, list[str]
         else:
             item["category"] = category
     data["metadata"] = metadata
-    return data, failures
+    return failures

@@ -8,10 +8,11 @@
   when it moves between them, so a regression scenario that came from reference still has its
   reference number.
 - Gaps are allowed. When a scenario is deleted or moves out of a folder, add one line under
-  [Gaps](#gaps) that names the suite it left, its number, and what happened, in the form
-  `- evals-reference 03: deleted, the main suite covers it`. The validator fails on any gap
-  without a note for that suite and number, on notes in any other form, and on notes for a
-  number that is in use again.
+  [Gaps](#gaps) in the form `- <suite> <NN>: deleted, <reason>`, naming the suite the number
+  left, for example `- evals-reference 03: deleted, the main suite covers it`. The validator
+  fails on a gap without such a note, on a note in any other form, on a note that names another
+  suite than the one git history last shows the number in, and on a note for a number that any
+  suite of the same number space uses again.
 
 ## Promotion rule
 

@@ -23,14 +23,16 @@ Follow these in order.
    `evals/01-settings-loader-errors`: a `task.md` with the prompt a user would type (no fix, no
    skill name, one `Assume ...` line for the version), a one-line `capability.txt`, a
    `criteria.json` with 15 safety, 80 quality, and 5 maintainability points, and a
-   `criteria-meta.json`. Delete the three example scenarios, which test the error message
+   `criteria-meta.json`. Start the `context` in `criteria.json` with "Reference coverage", not
+   "Main eval"; the validator keeps "Main eval" for scenarios in `evals/`. Delete the three example scenarios, which test the error message
    convention, and update the table in `evals/NUMBERING.md`. Put the identifiers every task in
    your domain shares (language keywords, standard library names) into `DOMAIN_IDENTIFIERS` at
    the top of `scripts/validate_eval_criteria.py`. Then run
    `python3 scripts/validate_eval_criteria.py evals evals-reference evals-regression`.
 5. **Write SKILL.md from the issue only.** Replace "error messages" in the `description` of
-   `skills/my-skill/SKILL.md` and in `skills/my-skill/agents/openai.yaml` with your subject, then
-   rewrite the body and the two files in `skills/my-skill/references/` from the issue. Do not open your `criteria.json` while you write;
+   `skills/my-skill/SKILL.md`, in `skills/my-skill/agents/openai.yaml`, and in the `description`
+   and `summary` of `.tessl-plugin/plugin.json` with your subject, then rewrite the body and the
+   two files in `skills/my-skill/references/` from the issue. Do not open your `criteria.json` while you write;
    a skill copied from the checklist passes its own test and nothing else.
 6. **Run the quality review to 100.** Run
    `tessl review run --threshold 100 skills/my-skill/SKILL.md` and fix every finding until it
@@ -81,10 +83,12 @@ Hosted evals cost credits (see [Credits](#credits)). Log in once:
 tessl login
 ```
 
-`tessl.json` and `.tessl-plugin/plugin.json` name the `martinfrancois` workspace. Put your Tessl
-workspace name in front of the slash in both files before the first hosted run. If
-`tessl eval run` then reports that the directory is not linked to a project, run
-`tessl project create skill-starter --workspace <your-workspace>`.
+Link this directory to a Tessl project in your workspace (`tessl workspace list` shows its
+name). The `--workspace` flag takes precedence over the `martinfrancois/` prefix in `tessl.json`:
+
+```bash
+tessl project create skill-starter --workspace <your-workspace>
+```
 
 Run the main suite, with and without the skill:
 

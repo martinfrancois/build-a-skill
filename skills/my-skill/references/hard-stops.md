@@ -13,22 +13,25 @@ Treat these as secrets:
 - card numbers, bank account numbers, and national ID numbers
 - URLs and connection strings that contain a user name and password, or a token in the query
 
-Name the field so the reader still knows what to fix:
+Name what failed with something safe instead. In this nightly backup job, the upload link carries
+a signature in its query string, so the message names the backup file and the setting:
 
 ```python
-# Bad: the whole connection string, password included, lands in the log.
-raise ConnectionError(f"cannot open cache {cache_dsn}: connection refused")
+# Bad: the signed link, signature included, lands in the job log.
+raise PermissionError(f"cannot upload backup to {upload_link}: storage answered 403")
 
-# Good: names the setting and the host, never the credentials.
-raise ConnectionError(f'cannot open cache "{cache_host}": connection refused, check CACHE_DSN')
+# Good: names the archive and the setting to fix, never the link.
+raise PermissionError(
+    f'cannot upload backup "{archive_name}": storage answered 403, renew BACKUP_UPLOAD_LINK'
+)
 ```
 
-When the only useful detail is the secret itself, say which one was wrong:
-`cannot sign request: the signing key was rejected, rotate SIGNING_KEY`.
+When the secret itself is what went wrong, say which one, not what it was:
+`cannot start backup job: the storage signing key was rejected, rotate BACKUP_SIGNING_KEY`.
 
 ## Check before you finish
 
 Look at every interpolated value in the messages you touched. If a variable's name or source
-suggests a secret (`password`, `token`, `key`, `secret`, `dsn`, `auth`, or a card number),
-replace it with the field name or a non-secret identifier such as a host name or the last four
-digits.
+suggests a secret (`password`, `token`, `key`, `secret`, `signature`, `auth`, or a link with a
+query string), replace it with a safe name for the thing that failed: a file name, a job name,
+or the setting that holds the secret.

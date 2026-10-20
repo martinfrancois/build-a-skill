@@ -20,20 +20,36 @@ Follow these in order.
    skill to write; go back to step 1. If the guided session still gets it wrong, the issue is not
    clear yet; rewrite it and replay.
 4. **Reduce to an eval.** Make a folder in `evals-reference/` with the same four files as
-   `evals/01-settings-loader-errors`: a `task.md` with the prompt a user would type (no fix, no
-   skill name, one `Assume ...` line for the version), a one-line `capability.txt`, a
-   `criteria.json` with 15 safety, 80 quality, and 5 maintainability points, and a
-   `criteria-meta.json`. Start the `context` in `criteria.json` with "Reference coverage", not
-   "Main eval"; the validator keeps "Main eval" for scenarios in `evals/`. Delete the three example scenarios, which test the error message
-   convention, and update the table in `evals/NUMBERING.md`. Put the identifiers every task in
-   your domain shares (language keywords, standard library names) into `DOMAIN_IDENTIFIERS` at
-   the top of `scripts/validate_eval_criteria.py`. Then run
-   `python3 scripts/validate_eval_criteria.py evals evals-reference evals-regression`.
-5. **Write SKILL.md from the issue only.** Replace "error messages" in the `description` of
-   `skills/my-skill/SKILL.md`, in `skills/my-skill/agents/openai.yaml`, and in the `description`
-   and `summary` of `.tessl-plugin/plugin.json` with your subject, then rewrite the body and the
-   two files in `skills/my-skill/references/` from the issue. Do not open your `criteria.json` while you write;
-   a skill copied from the checklist passes its own test and nothing else.
+   `evals/01-settings-loader-errors`:
+   - `task.md`: the prompt a user would type, with no fix, no skill name, and an `Assume ...`
+     sentence for the version.
+   - `capability.txt`: one line naming what the scenario tests.
+   - `criteria.json`: checks worth 15 safety, 80 quality, and 5 maintainability points. Start its
+     `context` with "Reference coverage"; the validator keeps "Main eval" for `evals/`.
+   - `criteria-meta.json`: the invocation, task type, evidence type, and a category per check.
+
+   Then clean up the example:
+   - Delete the three example scenarios, which test the error message convention.
+   - Replace the rows of the "Current numbers" table in `evals/NUMBERING.md` with yours. The
+     validator flags rows whose folder no longer exists.
+   - In `scripts/validate_eval_criteria.py`, keep the general programming words at the top of
+     `DOMAIN_IDENTIFIERS` and replace the entries under its `# Example domain` comment with the
+     identifiers every task in your domain shares.
+   - Run `python3 scripts/validate_eval_criteria.py`.
+
+   The validator also fails a main task that repeats 85% or more of a reference or regression
+   task, so move a scenario between suites instead of copying it.
+5. **Write SKILL.md from the issue only.** Rewrite these from the issue, in your own subject:
+   - `skills/my-skill/SKILL.md`: the `description` (what the skill does, then the situations that
+     should trigger it) and the whole body.
+   - `skills/my-skill/references/`: both files, with examples from a domain none of your eval
+     tasks use.
+   - `skills/my-skill/agents/openai.yaml`: `short_description` and `default_prompt`. Keep
+     `display_name` unless you rename the skill.
+   - `.tessl-plugin/plugin.json`: `description` and `summary`.
+
+   Do not open your `criteria.json` while you write; a skill copied from the checklist passes its
+   own test and nothing else.
 6. **Run the quality review to 100.** Run
    `tessl review run --threshold 100 skills/my-skill/SKILL.md` and fix every finding until it
    passes.
@@ -58,9 +74,9 @@ Follow these in order.
 | `skills/my-skill/SKILL.md` | The skill: description, hard stop, workflow, reference table, example |
 | `skills/my-skill/references/` | `examples.md` (one function worked through) and `hard-stops.md` (what counts as a secret) |
 | `skills/my-skill/agents/openai.yaml` | Display name and default prompt that Codex shows for the skill |
-| `evals/01-settings-loader-errors` | Main suite: a natural prompt where the skill should change the answer |
-| `evals-reference/01-webhook-error-review` | Reference suite: an explicit review of four messages |
-| `evals-regression/02-hard-stop-audit` | Regression suite: a check that needs the skill's exact hard-stop text |
+| `evals/` | Main suite, the only source of lift claims; ships with one example scenario |
+| `evals-reference/` | Reference suite, where new scenarios start; ships with one example scenario |
+| `evals-regression/` | Regression suite, run with the skill only; ships with one example scenario |
 | `evals/NUMBERING.md` | How scenarios are numbered and when one moves to the main suite |
 | `scripts/` | Suite runner, criteria validator, and result classifier |
 | `AGENTS.md`, `docs/agents/` | Rules for coding agents working on this repo: workflow, evals, skill text |
@@ -71,7 +87,9 @@ Follow these in order.
 The local checks are free:
 
 ```bash
-python3 scripts/validate_eval_criteria.py evals evals-reference evals-regression
+python3 scripts/validate_eval_criteria.py
+python3 -m py_compile scripts/*.py
+bash -n scripts/*.sh
 tessl skill lint .
 tessl plugin lint .
 for suite in evals evals-reference evals-regression; do tessl eval lint "$suite"; done
@@ -160,7 +178,7 @@ policy:
 ```
 
 For Claude Code, add this line to the frontmatter of `skills/my-skill/SKILL.md`, below
-`license: MIT`:
+`license: MIT`. It is a Claude Code field, not part of the Agent Skills spec:
 
 ```yaml
 disable-model-invocation: true

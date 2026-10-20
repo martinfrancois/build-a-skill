@@ -21,8 +21,9 @@ Follow these in order.
    clear yet; rewrite it and replay.
 4. **Reduce to an eval.** Make a folder in `evals-reference/` with the same four files as
    `evals/01-settings-loader-errors`:
-   - `task.md`: the prompt a user would type, with no fix, no skill name, and an `Assume ...`
-     sentence for the version.
+   - `task.md`: the prompt a user would type, with no fix, an `Assume ...` sentence for the
+     version, and no skill name unless the scenario is explicit. The shipped reference example
+     is explicit, so it opens with "Use $my-skill"; leave those words out of a natural scenario.
    - `capability.txt`: one line naming what the scenario tests.
    - `criteria.json`: checks worth 15 safety, 80 quality, and 5 maintainability points. Start its
      `context` with "Reference coverage"; the validator keeps "Main eval" for `evals/`.
@@ -46,10 +47,13 @@ Follow these in order.
      tasks use.
    - `skills/my-skill/agents/openai.yaml`: `short_description` and `default_prompt`. Keep
      `display_name` unless you rename the skill.
-   - `.tessl-plugin/plugin.json`: `description` and `summary`.
+   - `.tessl-plugin/plugin.json`: `description`, `summary`, and `repository` and `homepage`
+     (the URL of your copy of this repo).
 
    Do not open your `criteria.json` while you write; a skill copied from the checklist passes its
-   own test and nothing else.
+   own test and nothing else. Then run `python3 scripts/validate_eval_criteria.py` again: its
+   check for overlap between your eval tasks and the references only means something once the
+   references are yours.
 6. **Run the quality review to 100.** Run
    `tessl review run --threshold 100 skills/my-skill/SKILL.md` and fix every finding until it
    passes.
@@ -57,7 +61,8 @@ Follow these in order.
    `scripts/run_eval_suite.sh reference`. When a with-skill score is below 100, fix the skill, not
    the task: adding hints to `task.md` or loosening `criteria.json` makes the number meaningless.
    Once the scenario scores 100 with the skill and at least 30 points less without it, move it
-   to `evals/`. `evals/NUMBERING.md` has the full rule.
+   to `evals/` and change the start of its `context` from "Reference coverage" to "Main eval".
+   `evals/NUMBERING.md` has the full rule.
 8. **Weight by difference.** Read the per-check results of the run without the skill
    (`tessl eval view <run-id>`). Move quality points toward the checks it missed and away from the
    ones both runs passed, keep the 15/80/5 split, and rerun both variants. This changes how many
@@ -108,7 +113,7 @@ name). The `--workspace` flag takes precedence over the `martinfrancois/` prefix
 tessl project create skill-starter --workspace <your-workspace>
 ```
 
-Run the main suite, with and without the skill:
+Once `evals/` has a scenario, run the main suite, with and without the skill:
 
 ```bash
 tessl eval run --skill my-skill .

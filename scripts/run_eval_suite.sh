@@ -7,9 +7,11 @@ Usage:
   scripts/run_eval_suite.sh <main|reference|regression> [scenario ...] [-- tessl eval run args...]
 
 Runs hosted Tessl evals with the repository's variant policy:
-  main       -> baseline control and with-context
-  reference  -> baseline control and with-context
-  regression -> with-context only
+  main       -> with and without the skill
+  reference  -> with and without the skill
+  regression -> with the skill only
+
+A scenario is a folder name, or a path inside the folder of the suite named first.
 
 Examples:
   scripts/run_eval_suite.sh main -- --label "main check"
@@ -21,7 +23,7 @@ another one with --agent and --model after -- needs the modelSelection entitleme
 free plans lack.
 
 Do not pass --skip-baseline. This script chooses variants from the suite purpose.
-The runner passes --skill <name> so with-context runs exercise this skill instead of relying on
+The runner passes --skill <name> so runs with the skill use this skill instead of relying on
 solver auto-selection. The name is $SKILL_NAME, or the only folder under skills/. It also passes
 --force so runs after a skill or runner fix cannot reuse stale hosted solutions.
 USAGE
@@ -48,15 +50,15 @@ variant_args=()
 case "$suite" in
   main)
     source_dir="evals"
-    variant_label="baseline control + with-context"
+    variant_label="with and without the skill"
     ;;
   reference)
     source_dir="evals-reference"
-    variant_label="baseline control + with-context"
+    variant_label="with and without the skill"
     ;;
   regression)
     source_dir="evals-regression"
-    variant_label="with-context only"
+    variant_label="with the skill only"
     variant_args=(--skip-baseline)
     ;;
   -h|--help|help)
@@ -132,6 +134,37 @@ if [[ "$suite" == "main" && "${#scenarios[@]}" -eq 0 ]]; then
   exit 0
 fi
 
+# A scenario is a folder name, or a path whose parent folder is the suite named first, so a
+# reference scenario cannot run under the regression variant policy.
+scenario_names=()
+for requested in ${scenarios[@]+"${scenarios[@]}"}; do
+  name="${requested%/}"
+  if [[ "$name" == */* ]]; then
+    parent="$(basename "$(dirname "$name")")"
+    if [[ "$parent" != "$source_dir" ]]; then
+      echo "Scenario $requested is not in $source_dir/; pass it to the suite its folder belongs to." >&2
+      exit 2
+    fi
+    name="$(basename "$name")"
+  fi
+  if [[ ! -d "$source_path/$name" ]]; then
+    echo "Unknown $suite scenario: $requested (looked in $source_dir/)" >&2
+    exit 1
+  fi
+  scenario_names+=("$name")
+done
+if [[ "${#scenario_names[@]}" -eq 0 ]]; then
+  for scenario in "$source_path"/*/; do
+    if [[ -d "$scenario" ]]; then
+      scenario_names+=("$(basename "$scenario")")
+    fi
+  done
+  if [[ "${#scenario_names[@]}" -eq 0 ]]; then
+    echo "No scenarios found in $source_path" >&2
+    exit 1
+  fi
+fi
+
 # Tessl reads scenarios from evals/, so stage the requested ones there and restore it on exit.
 tmp_dir="$(mktemp -d)"
 backup_evals="$tmp_dir/evals-original"
@@ -152,38 +185,8 @@ trap restore EXIT
 
 mv "$staged_evals" "$backup_evals"
 mkdir -p "$staged_evals"
-
-copy_scenario() {
-  local requested="$1"
-  local candidate
-
-  if [[ -d "$source_path/$requested" ]]; then
-    candidate="$source_path/$requested"
-  elif [[ -d "$requested" ]]; then
-    candidate="$(cd "$requested" && pwd)"
-  elif [[ -d "$source_path/$(basename "$requested")" ]]; then
-    candidate="$source_path/$(basename "$requested")"
-  else
-    echo "Unknown $suite scenario: $requested" >&2
-    exit 1
-  fi
-
-  cp -a "$candidate" "$staged_evals/"
-}
-
-if [[ "${#scenarios[@]}" -eq 0 ]]; then
-  for scenario in "$source_path"/*/; do
-    if [[ -d "$scenario" ]]; then
-      scenarios+=("$(basename "$scenario")")
-    fi
-  done
-  if [[ "${#scenarios[@]}" -eq 0 ]]; then
-    echo "No scenarios found in $source_path" >&2
-    exit 1
-  fi
-fi
-for scenario in "${scenarios[@]}"; do
-  copy_scenario "$scenario"
+for name in "${scenario_names[@]}"; do
+  cp -a "$source_path/$name" "$staged_evals/"
 done
 
 echo "Running the $suite eval suite with a temporary evals/ staging area."

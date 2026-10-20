@@ -11,29 +11,23 @@ from __future__ import annotations
 
 import argparse
 import json
-import re
-import sys
 from pathlib import Path
 from typing import Any
 
+from eval_common import error, is_skill_context_dependent, normalized
 
-DEFAULT_MAIN_DELTA_FLOOR = 30.0
-
-
-def error(message: str) -> int:
-    print(f"error: {message}", file=sys.stderr)
-    return 1
+# The promotion rule from evals/NUMBERING.md: a delta of at least this many percentage points.
+MAIN_DELTA_FLOOR = 30.0
+# `tessl eval view --json` names the with-skill variant usage-spec and the control baseline.
+WITH_SKILL_VARIANT = "usage-spec"
+WITHOUT_SKILL_VARIANT = "baseline"
 
 
 def score(solution: dict[str, Any]) -> tuple[float, float]:
     results = solution.get("assessmentResults") or []
     earned = sum(float(item.get("score") or 0) for item in results)
-    maximum = sum(float(item.get("max_score") or item.get("maxScore") or 0) for item in results)
+    maximum = sum(float(item.get("max_score") or 0) for item in results)
     return earned, maximum
-
-
-def normalized(text: str) -> str:
-    return " ".join(re.findall(r"[a-z0-9]+", text.lower()))
 
 
 def scenario_text_from_dir(path: Path | None) -> str:
@@ -61,42 +55,6 @@ def scenario_metadata_from_dir(path: Path | None) -> dict[str, Any]:
     if not isinstance(metadata, dict):
         return {}
     return metadata
-
-
-def is_skill_context_dependent(text: str) -> bool:
-    lowered = text.lower()
-    context_terms = (
-        "skill bundle",
-        "skill package",
-        "skill-provided",
-        "skill-only context",
-        "agent instructions",
-        "from the skill",
-        "from the skill bundle",
-        "bundled reference",
-        "bundled reference text",
-        "exact skill-provided text",
-        "exact wording",
-        "exact text",
-        "exact scan",
-        "exact scan header",
-        "exact checklist",
-        "exact procedure",
-        "exact command",
-        "scan command from the skill",
-    )
-    required_terms = (
-        "exact",
-        "skill-provided",
-        "skill-only context",
-        "skill package",
-        "agent instructions",
-        "from the skill",
-        "bundled reference",
-    )
-    return any(term in lowered for term in context_terms) and any(
-        term in lowered for term in required_terms
-    )
 
 
 def find_scenario(data: dict[str, Any], query: str | None) -> dict[str, Any]:
@@ -128,7 +86,6 @@ def classify(
     with_score: tuple[float, float] | None,
     without_score: tuple[float, float] | None,
     skill_context_dependent: bool,
-    main_delta_floor: float,
 ) -> tuple[str, str]:
     if with_score is None:
         return "fix-required", "with-context result is missing; run with context before classifying"
@@ -162,10 +119,10 @@ def classify(
         return "regression", "both variants scored 100%; keep as with-context safety coverage"
 
     delta = with_percent - without_percent
-    if delta >= main_delta_floor:
-        return "main", f"clean with-context result and {delta:.1f} pp delta meets main floor {main_delta_floor:.1f} pp"
+    if delta >= MAIN_DELTA_FLOOR:
+        return "main", f"clean with-context result and {delta:.1f} pp delta meets main floor {MAIN_DELTA_FLOOR:.1f} pp"
 
-    return "reference", f"clean with-context result but {delta:.1f} pp delta is below main floor {main_delta_floor:.1f} pp"
+    return "reference", f"clean with-context result but {delta:.1f} pp delta is below main floor {MAIN_DELTA_FLOOR:.1f} pp"
 
 
 def main() -> int:
@@ -177,12 +134,6 @@ def main() -> int:
         type=Path,
         help="Local scenario directory for skill-context-dependent detection",
     )
-    parser.add_argument(
-        "--main-delta-floor",
-        type=float,
-        default=DEFAULT_MAIN_DELTA_FLOOR,
-        help="Minimum percentage-point delta required for main promotion",
-    )
     args = parser.parse_args()
 
     try:
@@ -192,8 +143,8 @@ def main() -> int:
         return error(str(exc))
 
     solutions = {solution.get("variant"): score(solution) for solution in scenario.get("solutions", [])}
-    with_score = solutions.get("usage-spec") or solutions.get("with-context")
-    without_score = solutions.get("baseline") or solutions.get("without-context")
+    with_score = solutions.get(WITH_SKILL_VARIANT)
+    without_score = solutions.get(WITHOUT_SKILL_VARIANT)
 
     title = scenario.get("shortDescription") or "(untitled scenario)"
     task_text = scenario.get("task") or ""
@@ -208,7 +159,6 @@ def main() -> int:
         with_score=with_score,
         without_score=without_score,
         skill_context_dependent=skill_context_dependent,
-        main_delta_floor=args.main_delta_floor,
     )
 
     def fmt(value: tuple[float, float] | None) -> str:

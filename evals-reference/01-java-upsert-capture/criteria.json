@@ -1,0 +1,46 @@
+{
+  "context": "Reference coverage: a skill written from a one-round conversation about a Java lookup. A good answer writes a SKILL.md whose description names the task and the words a user would type, a hard stop that comes from the correction and nothing invented beyond it, a numbered workflow ending in a check, a references file with the not-like-this and like-this pair and the why, and one eval whose task is in another domain than the conversation, carries no hint of the answer, and weights the habit.",
+  "type": "weighted_checklist",
+  "checklist": [
+    {
+      "name": "Writes the four files with valid front matter",
+      "max_score": 15,
+      "description": "Creates skills/<name>/SKILL.md with front matter holding a kebab-case name and a description, skills/<name>/references/examples.md, and one evals-reference/01-<slug>/ folder holding task.md and a criteria.json that parses as a weighted checklist."
+    },
+    {
+      "name": "Description names the task and the trigger words",
+      "max_score": 15,
+      "description": "The description says in the third person what the skill does (a lookup in a collection followed by an action on the found or missing element) and lists situations in the words a user would type, such as upsert, find-or-create, get-or-default, ending with a phrase like even if the user never says stream or Optional, and says what it is not for."
+    },
+    {
+      "name": "Hard stop traces to the correction",
+      "max_score": 15,
+      "description": "SKILL.md has one or two hard stops, and each is the correction the user made (no loop with an early return for a lookup; use a stream and the Optional API). No rule is added that the conversation does not support, such as rules about logging, naming, tests, or other Optional methods the user never mentioned."
+    },
+    {
+      "name": "Workflow ends in a check",
+      "max_score": 10,
+      "description": "SKILL.md has a numbered workflow whose last step is something the agent can tell is done, such as the method compiles and contains no loop and no early return."
+    },
+    {
+      "name": "References carry the pair and the why",
+      "max_score": 15,
+      "description": "references/examples.md shows the loop version under a not-like-this heading and the stream version under a like-this heading, in the conversation's own domain, with a one-sentence why taken from the correction."
+    },
+    {
+      "name": "Eval task is realistic, in another domain, and gives nothing away",
+      "max_score": 15,
+      "description": "The eval task.md is a prompt someone would type (a class with a collection and existing helpers, a method to add), uses a domain other than tickets and other than any example the written skill contains, and does not mention stream, Optional, findFirst, map, orElseGet, loops, or early returns."
+    },
+    {
+      "name": "Eval checklist weights the habit",
+      "max_score": 10,
+      "description": "criteria.json gives most of its points to the habit (stream lookup, Optional handling of both cases, no loop or early return) and a minority to compiling, preserved behavior and scope."
+    },
+    {
+      "name": "Nothing speculative or copied",
+      "max_score": 5,
+      "description": "The skill text does not quote the eval's class or method names, does not mention scores or scenarios, and does not promise behaviors the conversation never showed."
+    }
+  ]
+}

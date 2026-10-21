@@ -12,7 +12,9 @@ in order, with four files (the template's three example scenarios show the exact
   sentence naming the language version or environment, and a named file to produce. Ordinary
   work with the trap in it. No hint of the answer: not the pattern's name, not the shape, not
   "avoid X". Not the example from the skill's references, and not the conversation's code
-  pasted in; a similar task in a different domain.
+  pasted in; a similar task in a different domain. Keep it the length of a real prompt: the
+  class or the branch and the request, not a brief with an issue, commits and the outcome of
+  the checks, which hands the grader what the agent should have produced.
 - `capability.txt`: one line naming what the scenario tests.
 - `criteria.json`: a Tessl `weighted_checklist` scored out of 100: 15 safety points, 80 quality
   points on the habit the skill teaches, 5 maintainability points. Put the quality points where

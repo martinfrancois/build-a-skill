@@ -41,7 +41,8 @@ clean:
 
 0. `tessl project create $NAME --workspace <workspace>` once, so `tessl.json` is linked to a
    project; ask the user for the workspace. Without it every hosted run fails after the free
-   local checks pass. If tessl says the credit allowance is used up, stop and report.
+   local checks pass. If tessl says the credit allowance is used up, switch to the local screen
+   below instead of another workspace.
 1. `tessl review run --threshold 100 skills/$NAME/SKILL.md`, and fix every finding.
 2. Freeze the skill text.
 3. `scripts/run_eval_suite.sh reference <scenario>` for each scenario, both variants.
@@ -49,6 +50,24 @@ clean:
 
 The finish line: every with-skill scenario at 100, without leading tasks or answer keys. Any
 edit to `SKILL.md` or its references invalidates earlier runs.
+
+## When the credits are used up
+
+The template carries `scripts/local_screen.sh`: the same scenarios run on the user's machine
+against the model behind Tessl's default solver (DeepSeek V4.1 Flash through its
+Anthropic-compatible endpoint), one to two cents a run, graded by a Claude judge. It needs a
+DeepSeek API key in `~/deepseek-api-key`; if the file is missing, ask the user for one and stop.
+
+```bash
+scripts/local_screen.sh -n 2 evals-reference/<scenario>            # baseline arm
+scripts/local_screen.sh -m skill -n 2 evals-reference/<scenario>   # skill arm
+scripts/local_screen.sh --summary; scripts/local_screen.sh --summary -m skill
+```
+
+Read the `lost` lines; tune the skill the same way. Report the numbers as local screening
+results with run counts and ranges, never as hosted scores, and say that the hosted run is
+still owed once credits are back. `docs/agents/local-screening.md` in the new repository has
+the full method.
 
 ## The stop rule
 

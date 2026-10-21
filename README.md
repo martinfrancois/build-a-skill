@@ -15,7 +15,13 @@ ask you for what it cannot find.
 
 ## Install
 
-A symlink keeps the installed skill in step with this repository.
+From the Tessl registry, into the agents configured in your project:
+
+```bash
+tessl install martinfrancois/build-a-skill
+```
+
+Or from a clone; a symlink keeps the installed skill in step with this repository.
 
 ```bash
 git clone https://github.com/martinfrancois/build-a-skill.git

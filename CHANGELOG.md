@@ -22,6 +22,11 @@
 
 ### Fixes
 
+* credits: the allowance is 1,000 credits per calendar month, not per day; the "Daily eval
+  usage" line is a separate attempt cap. The skill and the template check
+  `tessl org usage --json` before a hosted eval run and switch to the local screen when the
+  account is over the allowance, even though Tessl may still accept the run; the quality
+  review is free since CLI 0.117.0
 * build-a-skill: in the Codex sandbox the nested replay, the worktree and the install symlink
   are refused; the skill now hands the user the exact command instead of skipping the step;
   from the first Codex trial, 2026-10-21

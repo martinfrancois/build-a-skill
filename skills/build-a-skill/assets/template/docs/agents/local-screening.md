@@ -3,8 +3,8 @@
 ## Scope
 
 Use this to run eval scenarios against the model behind Tessl's default solver on your own
-machine, for one to two cents a run, before spending Tessl credits or when the credit allowance
-is used up (the free plan gives 1,000 credits per day, UTC). It covers setup, the commands, how
+machine, for one to two cents a run, before spending Tessl credits or when the monthly credit
+allowance is used up (see [Credits](../../README.md#credits)). It covers setup, the commands, how
 to read the output, and how to tune the skill against it. It does not replace hosted runs:
 benchmark claims, release-readiness claims, and the registry score still come from Tessl.
 

@@ -43,13 +43,17 @@ continue from it. A replay that never ran is not a replay.
 
 ## Prove it
 
-Hosted runs cost credits; spend them in this order and stop at the first stage that is not
-clean:
+Hosted eval runs cost credits; the quality review is free (since CLI 0.117.0). Go in this order
+and stop at the first stage that is not clean:
 
 0. `tessl project create $NAME --workspace <workspace>` once, so `tessl.json` is linked to a
    project; ask the user for the workspace. Without it every hosted run fails after the free
-   local checks pass. If tessl says the credit allowance is used up, switch to the local screen
-   below instead of another workspace.
+   local checks pass. Then read the balance with `tessl org usage --json`. The allowance is
+   monthly (`credits.resetsAt`); the "Daily eval usage: N/1,000" line `tessl eval run` prints is a
+   separate daily attempt cap, not the balance. If `credits.overLimit` is true or
+   `credits.remaining` is below the estimate `tessl eval run` prints, switch to the local screen
+   below. Tessl may still accept runs over the allowance with a notice; that is not permission,
+   and another workspace is not a way around it.
 1. `tessl review run --threshold 100 skills/$NAME/SKILL.md`, and fix every finding.
 2. Freeze the skill text.
 3. `scripts/run_eval_suite.sh reference <scenario>` for each scenario, both variants.

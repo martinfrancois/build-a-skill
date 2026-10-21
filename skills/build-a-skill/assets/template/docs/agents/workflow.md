@@ -21,8 +21,11 @@ opening pull requests.
   for suite in evals evals-reference evals-regression; do tessl eval lint "$suite"; done
   ```
 
-- Hosted runs cost Tessl credits. Spend them in this order and stop at the first stage that is
-  not clean:
+- Hosted eval runs cost Tessl credits; the quality review is free since CLI 0.117.0. Before a
+  hosted eval run, check `tessl org usage --json`: if `credits.overLimit` is true or
+  `credits.remaining` is below the run's estimate, stop and use the
+  [local screen](local-screening.md) instead, even if Tessl would still accept the run. Go in
+  this order and stop at the first stage that is not clean:
   1. Quality review at 100:
      `tessl review run --threshold 100 skills/my-skill/SKILL.md`. Fix every finding before any
      eval run.

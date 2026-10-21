@@ -20,6 +20,9 @@
   description capture in, a skill folder out), with the template's scripts linked at the root
   and local screening results in `evals/NUMBERING.md`
 
+* evals: first hosted run, 64% without the skill and 99% with (1.54x); the Java capture
+  scenario moved to the main suite (56 without, 100 with)
+
 ### Fixes
 
 * credits: the allowance is 1,000 credits per calendar month, not per day; the "Daily eval

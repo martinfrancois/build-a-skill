@@ -32,7 +32,7 @@ runs with a reference or regression task fails the validator as a duplicate. Run
 
 ## Gaps
 
-None yet.
+- evals-reference 01: deleted, moved to `evals/` as main 01 after the hosted run of 2026-10-21 (56 without the skill, 100 with)
 
 ## Current numbers
 
@@ -41,9 +41,8 @@ folder no longer exists.
 
 | Suite | Number | Scenario |
 |---|---|---|
-| main | 01 | `evals/01-settings-loader-errors` |
-| reference | 01 | `evals-reference/01-webhook-error-review` |
-| regression | 02 | `evals-regression/02-hard-stop-audit` |
+| main | 01 | `evals/01-java-upsert-capture` |
+| reference | 02 | `evals-reference/02-pull-request-description-capture` |
 
 ## Local screening results (2026-10-21)
 
@@ -71,3 +70,20 @@ after the description named the replay and the scoring and gained a "not for" cl
 in the repository the skill generates (`skills/<name>/SKILL.md` and its local screening doc) and
 links one level deeper than the reviewer expects (`assets/template/`). Rewording them away cost
 7 content points (96), so the paths stay.
+
+## Hosted run (2026-10-21)
+
+Run `01a1602a-f150-7319-89ed-0f77710fafb9`, the Tessl default solver, both arms, 45 credits,
+against the skill as of PR 10 (review 98).
+
+| Scenario | Without the skill | With the skill | Placement |
+| --- | --- | --- | --- |
+| 01 Java upsert capture | 56 | 100 | main: 44 points under 100 without, 100 with |
+| 02 pull request description capture | 73 | 99 | stays reference: 27 points under, and 99 with |
+
+The suite as a whole: 64% without, 99% with, a lift of 1.54x (199 over 129). Without the skill
+the solver loses on its own rules: invented rules beyond the correction (eight numbered rules
+for a one-line correction), no numbered workflow ending in a check, and an eval in the
+conversation's own domain, in 02 the very same rate-limiter change. With the skill, 02 lost one
+point on the description's trigger words. The local screen had predicted 58 and 74 without,
+91 and 87 with; it underestimated the skill arm by about 10 points.

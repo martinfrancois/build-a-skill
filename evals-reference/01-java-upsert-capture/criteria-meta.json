@@ -1,0 +1,17 @@
+{
+  "metadata": {
+    "invocation": "natural",
+    "task_type": "implementation",
+    "evidence_type": "ordinary_lift"
+  },
+  "categories": {
+    "Writes the four files with valid front matter": "safety",
+    "Description names the task and the trigger words": "quality",
+    "Hard stop traces to the correction": "quality",
+    "Workflow ends in a check": "quality",
+    "References carry the pair and the why": "quality",
+    "Eval task is realistic, in another domain, and gives nothing away": "quality",
+    "Eval checklist weights the habit": "quality",
+    "Nothing speculative or copied": "maintainability"
+  }
+}

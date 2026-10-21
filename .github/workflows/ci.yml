@@ -1,0 +1,48 @@
+name: CI
+
+permissions:
+  contents: read
+
+on:
+  workflow_dispatch:
+  pull_request:
+    branches:
+      - main
+  push:
+    branches:
+      - main
+
+concurrency:
+  group: ci-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  test:
+    name: Validate skill and plugin
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+
+      - name: Setup Tessl CLI
+        uses: tesslio/setup-tessl@25ec223fc0da33b41b8044ff5ab2b85235f4f91e # v2
+        with:
+          version: "0.115.0"
+
+      - name: Validate eval criteria
+        run: python3 scripts/validate_eval_criteria.py evals evals-reference evals-regression
+
+      - name: Validate the template's own scenarios
+        working-directory: skills/build-a-skill/assets/template
+        run: python3 scripts/validate_eval_criteria.py evals evals-reference evals-regression
+
+      - name: Compile validation scripts
+        run: python3 -m py_compile skills/build-a-skill/assets/template/scripts/*.py
+
+      - name: Check shell scripts
+        run: bash -n skills/build-a-skill/assets/template/scripts/*.sh
+
+      - name: Lint skill
+        run: tessl skill lint .
+
+      - name: Lint Tessl plugin
+        run: tessl plugin lint .

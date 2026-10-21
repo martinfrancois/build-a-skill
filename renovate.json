@@ -2,7 +2,8 @@
   "$schema": "https://docs.renovatebot.com/renovate-schema.json",
   "extends": [
     "config:recommended",
-    "helpers:pinGitHubActionDigests"
+    "helpers:pinGitHubActionDigests",
+    ":rebaseStalePrs"
   ],
   "labels": [
     "dependencies"
@@ -20,7 +21,7 @@
   },
   "dependencyDashboardApproval": false,
   "separateMajorMinor": true,
-  "separateMultipleMajor": false,
+  "separateMultipleMajor": true,
   "automergeType": "pr",
   "platformAutomerge": false,
   "ignoreTests": false,
@@ -36,14 +37,24 @@
     "groupName": null,
     "groupSlug": null
   },
-  "rebaseWhen": "conflicted",
-  "schedule": [
-    "* * * * 5"
+  "customManagers": [
+    {
+      "customType": "regex",
+      "managerFilePatterns": [
+        "/^\\.github/workflows/ci\\.yml$/"
+      ],
+      "matchStrings": [
+        "version:\\s*[\"']?(?<currentValue>\\d+\\.\\d+\\.\\d+)[\"']?"
+      ],
+      "depNameTemplate": "tessl-cli",
+      "datasourceTemplate": "npm",
+      "packageNameTemplate": "tessl",
+      "versioningTemplate": "semver"
+    }
   ],
-  "updateNotScheduled": false,
   "packageRules": [
     {
-      "description": "Merge eligible non-major updates after checks pass.",
+      "description": "Public repository: merge eligible non-major updates after checks pass. Group only dependencies that need coordinated updates; keep unrelated updates separate.",
       "matchUpdateTypes": [
         "minor",
         "patch",
@@ -54,7 +65,7 @@
       "automerge": true
     },
     {
-      "description": "Major updates require human review of migration notes.",
+      "description": "Major updates require human review of migration notes. Preserve compatibility groups whose members must move together across a major boundary.",
       "matchUpdateTypes": [
         "major"
       ],
@@ -62,38 +73,6 @@
       "addLabels": [
         "major update"
       ]
-    },
-    {
-      "description": "Private repository: combine eligible automatic updates after package-specific rules to conserve Actions minutes. Keep existing review requirements unchanged.",
-      "matchUpdateTypes": [
-        "minor",
-        "patch",
-        "pin",
-        "pinDigest",
-        "digest"
-      ],
-      "matchJsonata": [
-        "automerge = true"
-      ],
-      "groupName": "Routine dependency updates",
-      "groupSlug": "routine-dependencies"
-    },
-    {
-      "description": "Private repository: bundle review-required updates without enabling automerge. Keep majors separate from reviewed non-major updates so incompatible major upgrades do not block other reviewed fixes.",
-      "matchUpdateTypes": [
-        "major",
-        "minor",
-        "patch",
-        "pin",
-        "pinDigest",
-        "digest"
-      ],
-      "matchJsonata": [
-        "$not(automerge = true)"
-      ],
-      "groupName": "Reviewed dependency updates",
-      "groupSlug": "reviewed-dependencies",
-      "automerge": false
     }
   ]
 }

@@ -130,6 +130,21 @@ scripts/run_eval_suite.sh regression
 scripts/run_eval_suite.sh reference 01-webhook-error-review
 ```
 
+### Screen locally for a cent a run
+
+When the credits are used up, or before spending them, run the same scenarios on your own
+machine against the model behind Tessl's default solver. You need a DeepSeek API key in
+`~/deepseek-api-key` (see [Local screening](docs/agents/local-screening.md) for the setup):
+
+```bash
+scripts/local_screen.sh -n 2 evals-reference/01-webhook-error-review            # without the skill
+scripts/local_screen.sh -m skill -n 2 evals-reference/01-webhook-error-review   # with the skill
+scripts/local_screen.sh --summary && scripts/local_screen.sh --summary -m skill
+```
+
+Local numbers predict the hosted result and decide where a scenario belongs; they are never
+hosted evidence.
+
 To decide where a scenario belongs after a run:
 
 ```bash

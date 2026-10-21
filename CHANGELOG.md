@@ -12,6 +12,10 @@
 * scripts: suite runner, criteria validator, and result classifier for Tessl evals
 * agent docs: workflow, eval, skill behavior, and doc maintenance rules
 
+* template: `scripts/local_screen.sh` and its judge, which run the scenarios locally against
+  the model behind Tessl's default solver for a cent a run when the credits are used up, with
+  `docs/agents/local-screening.md`; the skill falls back to it in the prove step
+
 ### Fixes
 
 * build-a-skill: copy the template from the skill's resolved path and never retype it, make

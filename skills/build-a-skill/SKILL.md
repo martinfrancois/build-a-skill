@@ -69,7 +69,10 @@ proves it with runs with and without the skill.
    (`tessl project create <name> --workspace <workspace>`; ask the user for the workspace), or
    the hosted runs fail after the local checks pass. Run the quality review to 100, then each
    scenario with and without the skill. If tessl reports that the credit allowance is used up,
-   stop and report; do not try another workspace. Every with-skill score must reach 100 without leading tasks or answer keys.
+   do not try another workspace: run the local screen instead, `scripts/local_screen.sh` in the
+   new repository, both arms (its `docs/agents/local-screening.md` has the setup; it needs a
+   DeepSeek API key in `~/deepseek-api-key`, and asks the user for one if the file is missing),
+   and report its numbers as local screening results, never as hosted scores. Every with-skill score must reach 100 without leading tasks or answer keys.
    At most three runs per scenario per change; if a run is stuck or a score does not move, stop
    and report instead of retrying. Promote a scenario to `evals/` only by the rule in
    `evals/NUMBERING.md`.

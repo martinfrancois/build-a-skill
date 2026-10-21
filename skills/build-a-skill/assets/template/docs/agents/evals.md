@@ -17,6 +17,9 @@ much the skill helps.
   with the reason, then rerun both variants.
 - Every with-skill result must reach 100 in every suite. Below 100, fix the skill and rerun that
   scenario. Do not move a failing scenario to another suite to hide it.
+- A number from `scripts/local_screen.sh` is a local screening result ([Local
+  screening](local-screening.md)): it decides placement and guides tuning, and is recorded as
+  local with its run count and range, never presented as a hosted result.
 
 ### Scenario format
 

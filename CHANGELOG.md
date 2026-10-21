@@ -22,6 +22,9 @@
 
 ### Fixes
 
+* build-a-skill: in the Codex sandbox the nested replay, the worktree and the install symlink
+  are refused; the skill now hands the user the exact command instead of skipping the step;
+  from the first Codex trial, 2026-10-21
 * build-a-skill: the description ends with what the skill is not for, the skill is read back
   against the capture and every rule without a correction deleted, and eval tasks stay the
   length of a real prompt; from the first local screen of the skill's own evals, 2026-10-21

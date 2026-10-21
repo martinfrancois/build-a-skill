@@ -34,6 +34,13 @@ In Codex, `codex exec "<prompt>"` in the worktree runs one prompt and exits; in 
 `claude -p "<prompt>"` does the same. Check in the transcript that the skill was opened; a skill
 that did not load has nothing to teach.
 
+Inside the Codex sandbox a nested `codex exec` cannot start: it needs to write its own state
+under `~/.codex`, and the sandbox mounts the home directory read-only. The same sandbox refuses
+`git worktree add` on a repository outside the workspace (clone it instead) and the symlink
+into `~/.agents/skills`. When a step is refused, do not skip it and do not retry with other
+paths: give the user the exact command to run outside the sandbox, wait for the result, and
+continue from it. A replay that never ran is not a replay.
+
 ## Prove it
 
 Hosted runs cost credits; spend them in this order and stop at the first stage that is not

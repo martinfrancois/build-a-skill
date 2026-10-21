@@ -42,9 +42,14 @@ proves it with runs with and without the skill.
    `error-messages`) and a directory for the new repository, by default a sibling of the current
    one. Ask once if either is unclear.
 4. **Scaffold the repository.** Copy everything under [assets/template/](assets/template/) into
-   that directory, rename `skills/my-skill` to `skills/<name>`, and replace every `my-skill` in
-   `tessl.json`, `.tessl-plugin/plugin.json`, `README.md`, and `scripts/` with the name. Delete
-   the three example scenarios; keep `evals/NUMBERING.md` with an empty table.
+   that directory with `cp -r`, from the resolved path of this skill (`readlink -f`), because an
+   installed skill is usually a symlink to a folder outside the working directory and the agent
+   may need the user's approval for that path. If the copy is refused, ask for the approval;
+   never retype the template by hand, which loses file modes and invites typos. Then rename
+   `skills/my-skill` to `skills/<name>`, replace every `my-skill` in `tessl.json`,
+   `.tessl-plugin/plugin.json`, `README.md`, and `scripts/` with the name, delete the three
+   example scenarios, keep `evals/NUMBERING.md` with an empty table, and make the first commit
+   (`git init`, then commit the scaffold) so the replay and the runs have a history to compare.
 5. **Write the skill.** Rewrite `skills/<name>/SKILL.md` from the capture notes only, following
    [writing-the-skill.md](references/writing-the-skill.md): a description that names the task
    and the words a user would type when it should fire, one or two hard stops, a numbered
@@ -60,8 +65,11 @@ proves it with runs with and without the skill.
    version that stayed. If it differs in the habit the skill teaches, fix the skill (never the
    prompt) and replay again. [replay-and-prove.md](references/replay-and-prove.md) has the exact
    steps for each agent.
-8. **Prove it, with a stop rule.** Run the quality review to 100, then each scenario with and
-   without the skill. Every with-skill score must reach 100 without leading tasks or answer keys.
+8. **Prove it, with a stop rule.** Link the repository to a tessl project first
+   (`tessl project create <name> --workspace <workspace>`; ask the user for the workspace), or
+   the hosted runs fail after the local checks pass. Run the quality review to 100, then each
+   scenario with and without the skill. If tessl reports that the credit allowance is used up,
+   stop and report; do not try another workspace. Every with-skill score must reach 100 without leading tasks or answer keys.
    At most three runs per scenario per change; if a run is stuck or a score does not move, stop
    and report instead of retrying. Promote a scenario to `evals/` only by the rule in
    `evals/NUMBERING.md`.

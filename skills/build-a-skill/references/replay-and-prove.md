@@ -39,6 +39,9 @@ that did not load has nothing to teach.
 Hosted runs cost credits; spend them in this order and stop at the first stage that is not
 clean:
 
+0. `tessl project create $NAME --workspace <workspace>` once, so `tessl.json` is linked to a
+   project; ask the user for the workspace. Without it every hosted run fails after the free
+   local checks pass. If tessl says the credit allowance is used up, stop and report.
 1. `tessl review run --threshold 100 skills/$NAME/SKILL.md`, and fix every finding.
 2. Freeze the skill text.
 3. `scripts/run_eval_suite.sh reference <scenario>` for each scenario, both variants.

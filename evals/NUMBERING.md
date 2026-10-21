@@ -62,3 +62,12 @@ conversation's own domain, an imperative description, no check at the end of the
 What it still loses with the skill: a rule or two beyond the correction (`orElseGet` over
 `orElse`), an eval task written as a brief, and judge strictness on the `license` line. Both
 stay in reference until the skill arm reaches 100 on the hosted run.
+
+## Quality review (2026-10-21)
+
+`tessl review run --force`, free since CLI 0.117.0: 95 (content 100, description 91), then 98
+after the description named the replay and the scoring and gained a "not for" clause (content
+100, description 100). The last 2 points are two validation warnings for paths that exist only
+in the repository the skill generates (`skills/<name>/SKILL.md` and its local screening doc) and
+links one level deeper than the reviewer expects (`assets/template/`). Rewording them away cost
+7 content points (96), so the paths stay.

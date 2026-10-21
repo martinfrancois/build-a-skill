@@ -1,6 +1,6 @@
 ---
 name: build-a-skill
-description: Builds an Agent Skill with evals out of the current conversation, once the agent has produced the code or result the user wanted after one or more corrections. Use whenever the user asks to turn this conversation, these corrections, or this fix into a skill; to make the agent remember this or stop repeating a mistake; or to build, create, or extract a skill from what just happened; also when the user says the agent finally got it right and should keep doing it this way, even if they never say "skill".
+description: Builds an Agent Skill with evals out of the current conversation, once the agent has produced the code or result the user wanted after one or more corrections. It writes the skill and one eval per correction, replays the first prompt with the skill installed to check it gets it right the first time, and scores the evals with and without it. Use whenever the user asks to turn this conversation, these corrections, or this fix into a skill; to make the agent remember this or stop repeating a mistake; or to build, create, or extract a skill from what just happened; also when the user says the agent finally got it right and should keep doing it this way, even if they never say "skill". Not for writing a skill from scratch with no conversation behind it.
 license: MIT
 ---
 
@@ -67,9 +67,11 @@ proves it with runs with and without the skill.
    steps for each agent.
 8. **Prove it, with a stop rule.** Link the repository to a tessl project first
    (`tessl project create <name> --workspace <workspace>`; ask the user for the workspace), or
-   the hosted runs fail after the local checks pass. Run the quality review to 100, then each
-   scenario with and without the skill. If tessl reports that the credit allowance is used up,
-   do not try another workspace: run the local screen instead, `scripts/local_screen.sh` in the
+   the hosted runs fail after the local checks pass. Run the quality review to 100 (free), then
+   each scenario with and without the skill. Before the first eval run, read
+   `tessl org usage --json`: if `credits.overLimit` is true or `credits.remaining` is below the
+   run's estimate, do not run it even if Tessl would accept it, and do not try another
+   workspace: run the local screen instead, `scripts/local_screen.sh` in the
    new repository, both arms (its `docs/agents/local-screening.md` has the setup; it needs a
    DeepSeek API key in `~/deepseek-api-key`, and asks the user for one if the file is missing),
    and report its numbers as local screening results, never as hosted scores. Every with-skill score must reach 100 without leading tasks or answer keys.

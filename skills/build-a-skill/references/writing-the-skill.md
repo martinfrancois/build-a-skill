@@ -17,6 +17,9 @@ the rest. Write the description in the third person: what the skill does, then t
 that should load it, in the words a user would type, then "even if the user never says ...",
 then one clause on what it is not for, so a generous trigger does not fire on every task in
 the language. Under 1,024 characters. Be generous with trigger words; agents undertrigger.
+The front matter is YAML: a colon followed by a space inside an unquoted description breaks
+it, and `tessl skill lint` does not notice; `tessl review run` and the agents do. Use a full
+stop or a semicolon instead, or quote the whole value.
 
 ## The shape of SKILL.md
 

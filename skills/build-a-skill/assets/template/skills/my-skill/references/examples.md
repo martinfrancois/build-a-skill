@@ -1,8 +1,8 @@
 # Worked example
 
-One function, before and after, with the reason for each change.
+## Error messages name the thing and the next step
 
-## Before
+### Not like this
 
 ```python
 def store_avatar(user_id: str, filename: str, data: bytes) -> str:
@@ -16,7 +16,7 @@ def store_avatar(user_id: str, filename: str, data: bytes) -> str:
         raise RuntimeError("Failed to upload avatar, sorry") from None
 ```
 
-## After
+### Like this
 
 ```python
 def store_avatar(user_id: str, filename: str, data: bytes) -> str:
@@ -35,7 +35,10 @@ def store_avatar(user_id: str, filename: str, data: bytes) -> str:
         ) from err
 ```
 
-## What changed
+Why: the caller sees the message without the code, so it has to say which thing failed and
+what to do next.
+
+### What changed
 
 | Message | Change |
 |---|---|

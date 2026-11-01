@@ -48,7 +48,7 @@ code, write the requested file first, then explain.
 
 | File | Read it when |
 |---|---|
-| [examples.md](references/examples.md) | You want a whole function worked through, before and after |
+| [examples.md](references/examples.md) | You want a whole function worked through, not like this and like this |
 | [hard-stops.md](references/hard-stops.md) | A message includes request data, credentials, or configuration values |
 
 ## Example

@@ -43,8 +43,8 @@ continue from it. A replay that never ran is not a replay.
 
 ## Prove it
 
-Hosted eval runs cost credits; the quality review is free (since CLI 0.117.0). Go in this order
-and stop at the first stage that is not clean:
+Hosted eval runs and the quality review cost credits (the template README's Credits section has
+the prices). Go in this order and stop at the first stage that is not clean:
 
 0. `tessl project create $NAME --workspace <workspace>` once, so `tessl.json` is linked to a
    project; ask the user for the workspace. Without it every hosted run fails after the free
@@ -56,8 +56,8 @@ and stop at the first stage that is not clean:
    and another workspace is not a way around it.
 1. `tessl review run --threshold 100 skills/$NAME/SKILL.md`, and fix every finding.
 2. Freeze the skill text.
-3. `scripts/run_eval_suite.sh reference <scenario>` for each scenario, both variants.
-4. `scripts/run_eval_suite.sh reference`, then `main` once scenarios have moved there.
+3. `./scripts/run_eval_suite.sh reference <scenario>` for each scenario, both variants.
+4. `./scripts/run_eval_suite.sh reference`, then `main` once scenarios have moved there.
 
 The finish line: every with-skill scenario at 100, without leading tasks or answer keys. Any
 edit to `SKILL.md` or its references invalidates earlier runs.

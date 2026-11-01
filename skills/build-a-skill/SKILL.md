@@ -36,49 +36,49 @@ proves it with runs with and without the skill.
 2. **Capture every round.** For each correction between the start and now, write down: the
    code before, the prompt, what you produced, the user's correction in their words, and the
    version that stayed. Then write why the version that stayed is better, in one sentence per
-   round. This is the material for the skill and for the evals; keep it in `notes/capture.md`
-   of the new repository.
+   round. Keep it in `notes/capture.md` of the new repository.
 3. **Choose a name and a place.** Propose a kebab-case name for the habit (`java-optionals`,
    `error-messages`) and a directory for the new repository, by default a sibling of the current
    one. Ask once if either is unclear.
-4. **Scaffold the repository.** Copy everything under [assets/template/](assets/template/) into
-   that directory with `cp -r`, from the resolved path of this skill (`readlink -f`), because an
-   installed skill is usually a symlink to a folder outside the working directory and the agent
-   may need the user's approval for that path. If the copy is refused, ask for the approval;
-   never retype the template by hand, which loses file modes and invites typos. Then rename
+4. **Scaffold the repository.** Copy everything under [the template folder](assets/template/)
+   into that directory with `cp -r`, from the resolved path of this skill (`readlink -f`). If
+   the copy is refused, ask for the approval; never retype the template by hand. Then rename
    `skills/my-skill` to `skills/<name>`, replace every `my-skill` in `tessl.json`,
    `.tessl-plugin/plugin.json`, `README.md`, and `scripts/` with the name, delete the three
    example scenarios, keep `evals/NUMBERING.md` with an empty table, and make the first commit
    (`git init`, then commit the scaffold) so the replay and the runs have a history to compare.
 5. **Write the skill.** Rewrite `skills/<name>/SKILL.md` from the capture notes only, following
    [writing-the-skill.md](references/writing-the-skill.md): a description that names the task
-   and the words a user would type when it should fire, one hard stop per correction, a numbered
-   workflow that ends in a check, and references that hold each round as a pair under the
-   headings "Not like this" and "Like this", with a one-sentence why. Fill
-   `agents/openai.yaml` and `.tessl-plugin/plugin.json`.
+   and the words a user would type when it should fire, at most two hard stops, each a
+   correction the user made, a numbered workflow that ends in a check, and references that hold
+   each round as a pair under the headings "Not like this" and "Like this", with a one-sentence
+   why. Fill `agents/openai.yaml` and `.tessl-plugin/plugin.json` with the fields "The other
+   files" in writing-the-skill.md lists.
 6. **Write one eval per round.** In `evals-reference/`, one scenario per correction, as
    [evals.md](references/evals.md) describes: a task someone would type, with the trap in it and
-   no hint; a checklist whose points sit on the habit. Run
-   `python3 scripts/validate_eval_criteria.py evals evals-reference evals-regression` until it
+   no hint; a checklist whose points sit on the habit. In the new repository, run
+   `python3 ./scripts/validate_eval_criteria.py evals evals-reference evals-regression` until it
    passes.
 7. **Replay the first prompt.** In a fresh session with the new skill installed, check out the
    commit from step 1 and run the prompt from step 1 unchanged. Compare the result with the
    version that stayed. If it differs in the habit the skill teaches, fix the skill (never the
    prompt) and replay again. [replay-and-prove.md](references/replay-and-prove.md) has the exact
    steps for each agent.
-8. **Prove it, with a stop rule.** Link the repository to a tessl project first
-   (`tessl project create <name> --workspace <workspace>`; ask the user for the workspace), or
-   the hosted runs fail after the local checks pass. Run the quality review to 100 (free), then
-   each scenario with and without the skill. Before the first eval run, read
-   `tessl org usage --json`: if `credits.overLimit` is true or `credits.remaining` is below the
-   run's estimate, do not run it even if Tessl would accept it, and do not try another
-   workspace: run the local screen instead, `scripts/local_screen.sh` in the
-   new repository, both arms (its `docs/agents/local-screening.md` has the setup; it needs a
-   DeepSeek API key in `~/deepseek-api-key`, and asks the user for one if the file is missing),
-   and report its numbers as local screening results, never as hosted scores. Every with-skill score must reach 100 without leading tasks or answer keys.
-   At most three runs per scenario per change; if a run is stuck or a score does not move, stop
-   and report instead of retrying. Promote a scenario to `evals/` only by the rule in
-   `evals/NUMBERING.md`.
+8. **Prove it, with a stop rule.**
+   - Link the repository to a tessl project first
+     (`tessl project create <name> --workspace <workspace>`; ask the user for the workspace),
+     or the hosted runs fail after the local checks pass.
+   - Read `tessl org usage --json` before every hosted run, the quality review included. If
+     `credits.overLimit` is true or `credits.remaining` is below the run's estimate, do not run
+     it and do not try another workspace. Run the local screen instead,
+     `./scripts/local_screen.sh` in the new repository, both arms, and report its numbers as
+     local screening results, never as hosted scores. Its `docs/agents/local-screening.md` has
+     the setup; it needs a DeepSeek API key in `~/deepseek-api-key` and asks for one if missing.
+   - Run `tessl review run --threshold 100 skills/<name>/SKILL.md` and fix every finding, then
+     each scenario with and without the skill. Every with-skill score must reach 100 without
+     leading tasks or answer keys.
+   - At most three runs per scenario per change; if a run is stuck or a score does not move,
+     stop and report. Promote a scenario to `evals/` only by the rule in `evals/NUMBERING.md`.
 9. **Install it and report.** Link the skill into the user's agent
    ([replay-and-prove.md](references/replay-and-prove.md) has the commands), then tell the user:
    where the repository is, the first prompt and commit you replayed, what the replay produced,
@@ -95,4 +95,4 @@ scores 100, the validator passes, and the skill is installed.
 | [writing-the-skill.md](references/writing-the-skill.md) | You write or revise `SKILL.md`, its description, or its references |
 | [evals.md](references/evals.md) | You write a scenario, choose points, or decide which suite it belongs in |
 | [replay-and-prove.md](references/replay-and-prove.md) | You replay the first prompt, run evals, or install the skill |
-| [assets/template/README.md](assets/template/README.md) | You want the same steps written for a person doing them by hand |
+| `README.md` in [the template](assets/template/) | You want the same steps written for a person doing them by hand |

@@ -106,3 +106,8 @@ the first fixes; 97, 97, 98 after the second.
 Quality review after the path fixes: validation 100 (it was 15 of 16 checks), description 100,
 content 92.5, 97 overall. Content scored 100, 92.5, 85 and 92.5 on four reviews of nearly the
 same body. A review costs 10 credits on CLI 0.119.0.
+
+The registry eval of 0.1.1, run `01a19934-4fad-7665-94b8-e93b96417886`, scored main 01 at 64
+without the skill and 96 with it, 4 points lost on trigger words: the description listed
+situations in code terms instead of the names a user would type. 0.1.2 asks for at least three
+such names in step 5. Local screen with the skill on 0.1.2: 99, 98, 98.

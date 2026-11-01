@@ -1,11 +1,23 @@
 # Changelog
 
+## 0.1.2 (2026-11-01)
+
+### Fixes
+
+* build-a-skill: step 5 asks for at least three short names people use for the habit in the
+  description, and writing-the-skill.md says a description of what the code does is not a
+  trigger word; the registry eval of 0.1.1 lost 4 points on main 01 there (96 with the skill)
+* template: `docs/agents/skill-behavior.md` asks for those short names too
+* changelog: the 0.1.1 entry said main 01 scores 100; that was a hosted run before the last
+  edits, and the registry eval of 0.1.1 scored 96
+
 ## 0.1.1 (2026-11-01)
 
 ### Fixes
 
 * build-a-skill: from the registry eval of 0.1.0 (96 with the skill) and two hosted runs after
-  it; main 01 now scores 100 with the skill and 64 without
+  it, the second at 100 with the skill and 64 without; the registry eval of 0.1.1 scored 96
+  (see 0.1.2)
   * the description lists the short names people give the pattern among its trigger words
   * the pair sits under "Not like this" and "Like this" headings, with a one-sentence why that
     restates the correction

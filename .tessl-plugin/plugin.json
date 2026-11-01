@@ -1,6 +1,6 @@
 {
   "name": "martinfrancois/build-a-skill",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "An Agent Skill that builds a skill with evals out of the conversation in which the agent finally got it right.",
   "summary": "An Agent Skill that builds a skill with evals out of the conversation in which the agent finally got it right.",
   "repository": "https://github.com/martinfrancois/build-a-skill",

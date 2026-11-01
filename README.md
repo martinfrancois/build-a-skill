@@ -61,10 +61,11 @@ doing them by hand.
 ## Credits
 
 Hosted evals use Tessl credits: as of October 2026, Free includes 1,000 per calendar month and a
-paired scenario costs 20; the quality review is free. The skill checks the balance with
-`tessl org usage --json` before the first eval run, spends credits in order (targeted scenarios,
-then suites), and stops at the first stage that is not clean. When the month's credits are used
-up it runs the scenarios locally against the same model for a cent or two each instead.
+paired scenario costs 20; since November 2026 a quality review costs 10. The skill checks the
+balance with `tessl org usage --json` before every hosted run, the review included, spends
+credits in order (targeted scenarios, then suites), and stops at the first stage that is not
+clean. When the month's credits are used up it runs the scenarios locally against the same
+model for a cent or two each instead.
 
 ## License
 

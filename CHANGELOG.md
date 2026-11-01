@@ -1,5 +1,27 @@
 # Changelog
 
+## 0.1.1 (2026-11-01)
+
+### Fixes
+
+* build-a-skill: from the registry eval of 0.1.0 (96 with the skill) and two hosted runs after
+  it; main 01 now scores 100 with the skill and 64 without
+  * the description lists the short names people give the pattern among its trigger words
+  * the pair sits under "Not like this" and "Like this" headings, with a one-sentence why that
+    restates the correction
+  * at most two hard stops, each a correction the user made and nothing more; choices the
+    kept version happens to make are not rules unless the user asked for them
+  * the last workflow step checks that the code compiles and no longer contains what the
+    correction rejected
+  * the eval's class, method and field names appear nowhere in the skill, trigger words
+    included
+* build-a-skill: the quality review's two path warnings are gone (validation 100), and step 8
+  gives the review command
+* template: the example skill's `references/examples.md` uses the "Not like this" and "Like
+  this" headings, and `docs/agents/skill-behavior.md` states the same hard-stop rule
+* credits: a quality review costs 10 credits on CLI 0.119.0; the skill, the template and the
+  README no longer call it free
+
 ## 0.1.0 (2026-10-21)
 
 ### Features

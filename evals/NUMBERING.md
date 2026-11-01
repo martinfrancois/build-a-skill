@@ -87,3 +87,22 @@ for a one-line correction), no numbered workflow ending in a check, and an eval 
 conversation's own domain, in 02 the very same rate-limiter change. With the skill, 02 lost one
 point on the description's trigger words. The local screen had predicted 58 and 74 without,
 91 and 87 with; it underestimated the skill arm by about 10 points.
+
+## Registry eval of 0.1.0 and the 0.1.1 fixes (2026-11-01)
+
+The registry eval of 0.1.0, run `01a1603f-47e8-729b-a7a3-f1b0b48c4986`, scored main 01 at 56
+without the skill and 96 with it. With the skill it lost 2 points on trigger words (no short
+names for the pattern) and 2 on the pair (inline labels instead of headings, a why of several
+sentences).
+
+| Run | Skill text | Without | With | What the with-skill run lost |
+| --- | --- | --- | --- | --- |
+| `01a198fb-416f-76d8-9d75-79f0a97b3e19` | trigger names, pair headings | 61 | 95 | a second, invented hard stop; the skill's trigger words included the eval's method name |
+| `01a19902-5437-7585-94a2-e49f3b5e891d` | one hard stop per correction, eval names kept out of the skill | 64 | 100 | nothing |
+
+Local screen of main 01 with the skill, three runs each: 96, 93, 86 on 0.1.0; 96, 99, 97 after
+the first fixes; 97, 97, 98 after the second.
+
+Quality review after the path fixes: validation 100 (it was 15 of 16 checks), description 100,
+content 92.5, 97 overall. Content scored 100, 92.5, 85 and 92.5 on four reviews of nearly the
+same body. A review costs 10 credits on CLI 0.119.0.

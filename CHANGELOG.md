@@ -1,5 +1,13 @@
 # Changelog
 
+## 0.1.3 (2026-11-02)
+
+### Fixes
+
+* build-a-skill: a leaner SKILL.md body that reviews at 100: the intro no longer restates the
+  description, step 4 is four bullets, step 5 is a checklist the agent runs against its draft,
+  and the reference pointers lost their repeated phrasing
+
 ## 0.1.2 (2026-11-01)
 
 ### Fixes

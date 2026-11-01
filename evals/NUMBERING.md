@@ -111,3 +111,8 @@ The registry eval of 0.1.1, run `01a19934-4fad-7665-94b8-e93b96417886`, scored m
 without the skill and 96 with it, 4 points lost on trigger words: the description listed
 situations in code terms instead of the names a user would type. 0.1.2 asks for at least three
 such names in step 5. Local screen with the skill on 0.1.2: 99, 98, 98.
+
+The registry eval of 0.1.2, run `01a1993d-ed11-728b-bf66-4ded8f4a9ed0`, scored main 01 at 64
+without the skill and 100 with it; its publish review gave 97. 0.1.3 rewrites the SKILL.md body
+more tightly, with the same steps and guards, and reviewed at 100 twice. Local screen with the
+skill on 0.1.3: 98, 97, 97.

@@ -17,14 +17,15 @@ supports.
 Agents read only the `name` and `description` at startup and decide from them whether to open
 the rest. Write the description in the third person: what the skill does, then the situations
 that should load it, in the words a user would type, then "even if the user never says ...",
-then one clause on what it is not for, so a generous trigger does not fire on every task in
-the language. Under 1,024 characters. Be generous with trigger words; agents undertrigger.
-Among them, list the short names people give the pattern itself, the terms they would put in a
-request or a commit title, not only a description of the action: for an error-message habit,
-"error message", "exception text" and "raise" next to "when a function rejects its input".
-The front matter is YAML: a colon followed by a space inside an unquoted description breaks
-it, and `tessl skill lint` does not notice; `tessl review run` and the agents do. Use a full
-stop or a semicolon instead, or quote the whole value.
+then one clause on what it is not for, so a generous trigger does not fire on every task in the
+language. Under 1,024 characters. Be generous with trigger words; agents undertrigger. Among
+them, list the short names people give the habit itself, the terms they would put in a request
+or a commit title; a description of what the code does is not a trigger word. For an
+error-message habit, "error message", "exception text" and "raise" are names; "when a function
+rejects its input" only describes the code. The front matter is YAML: a colon followed by a
+space inside an unquoted description breaks it, and `tessl skill lint` does not notice;
+`tessl review run` and the agents do. Use a full stop or a semicolon instead, or quote the whole
+value.
 
 ## The shape of SKILL.md
 

@@ -14,8 +14,9 @@ Editing `skills/my-skill/SKILL.md`, its references, or `skills/my-skill/agents/o
 - Keep `SKILL.md` short: when to use, the hard stop near the top, a numbered workflow whose
   last step is a check the agent can tell is done, a reference table, and one bad, then good
   example. Move detail that only some tasks need into `references/`.
-- A hard stop is a rule that beats every other step. Keep one or two; a long list of hard stops
-  means none of them stands out.
+- A hard stop is a rule that beats every other step, and each one is a correction the user made,
+  in what it said and nothing more. Keep at most two; a long list of hard stops means none of
+  them stands out.
 - Runtime references must not contain answer keys: no eval scenario names, expected outputs,
   scoring rubrics, run IDs, or score claims. The validator rejects the common markers.
 - Examples in references use a different domain from every eval task, so a high score shows the

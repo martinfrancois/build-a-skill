@@ -214,9 +214,10 @@ in its `task.md`.
 As of October 2026, Tessl Free includes 1,000 credits per calendar month, reset on the 1st, and
 each paired scenario (one run with the skill, one without) costs 20 credits. That is 50 paired
 scenario runs a month. One full pass over the starter suites is two paired scenarios plus one
-with-skill-only scenario, so at most 60 credits. The suite script passes `--force`, so every run
-is fresh and costs the full amount. Run single scenarios while you iterate and full suites only
-when the skill text is frozen.
+with-skill-only scenario, so at most 60 credits. A quality review costs 10 credits (Tessl CLI
+0.119.0, November 2026). The suite script passes `--force`, so every run is fresh and costs the
+full amount. Run single scenarios while you iterate and full suites only when the skill text is
+frozen.
 
 Check the balance before a hosted run, not after:
 
@@ -231,7 +232,8 @@ Three things that are easy to misread:
 - Over the allowance, Tessl may still accept runs with a one-line notice instead of refusing
   them. That is not permission to keep spending: stop and use the
   [local screen](docs/agents/local-screening.md) until the month resets.
-- Since CLI 0.117.0, `tessl review run` is free and runs even when the credits are used up.
+- `tessl review run` is not free: it draws on the same credits, so check the balance before a
+  review too.
 
 ## License
 

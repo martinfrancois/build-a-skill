@@ -29,15 +29,15 @@ stop or a semicolon instead, or quote the whole value.
 ## The shape of SKILL.md
 
 - A title and two sentences on what the skill is for.
-- One hard stop per correction, at most two: the rules that beat every other step. Each says
-  what the user's correction said and nothing more; something the correction implies but never
-  said, such as banning a neighbouring method, is not a hard stop. More than two means none
-  stands out.
+- At most two hard stops, each one the correction the user made, in what it said and nothing
+  more: something the correction implies but never said, such as banning a neighbouring method,
+  is not a hard stop. With more than two corrections, the two the user pressed hardest are hard
+  stops and the rest become workflow steps; more than two means none stands out.
 - "When to use": three to five bullets.
-- A numbered workflow whose last step is a check the agent can tell is done: the code compiles
-  and no longer contains what the correction rejected.
+- A numbered workflow whose last step is a check the agent can tell is done: for code, it
+  compiles and no longer contains what the correction rejected.
 - A reference table: file, and when to read it.
-- One pair: bad, then good, with the why in one sentence.
+- One pair under the headings "Not like this" and "Like this", with the why in one sentence.
 
 Keep `SKILL.md` under about 120 lines. Detail that only some tasks need goes into `references/`.
 

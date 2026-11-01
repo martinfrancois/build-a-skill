@@ -48,8 +48,9 @@ proves it with runs with and without the skill.
    example scenarios, keep `evals/NUMBERING.md` with an empty table, and make the first commit
    (`git init`, then commit the scaffold) so the replay and the runs have a history to compare.
 5. **Write the skill.** Rewrite `skills/<name>/SKILL.md` from the capture notes only, following
-   [writing-the-skill.md](references/writing-the-skill.md): a description that names the task
-   and the words a user would type when it should fire, at most two hard stops, each a
+   [writing-the-skill.md](references/writing-the-skill.md). The description names the task and,
+   in the words a user would type, when it should fire, with at least three short names people
+   use for the habit rather than a description of the code. Then at most two hard stops, each a
    correction the user made, a numbered workflow that ends in a check, and references that hold
    each round as a pair under the headings "Not like this" and "Like this", with a one-sentence
    why. Fill `agents/openai.yaml` and `.tessl-plugin/plugin.json` with the fields "The other

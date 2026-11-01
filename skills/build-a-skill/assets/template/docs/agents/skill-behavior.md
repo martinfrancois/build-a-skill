@@ -10,7 +10,9 @@ Editing `skills/my-skill/SKILL.md`, its references, or `skills/my-skill/agents/o
   `criteria.json`. A skill copied from criteria passes its own test and teaches nothing else.
 - The `description` decides when an agent loads the skill. Write it in the third person, name
   what the skill does, then list the situations that should trigger it with "Use whenever ...,
-  even if the user never says ...". Keep it under 1,024 characters.
+  even if the user never says ...". Among the trigger words, give the short names people use for
+  the habit ("error message", "raise"), not only a description of what the code does. Keep it
+  under 1,024 characters.
 - Keep `SKILL.md` short: when to use, the hard stop near the top, a numbered workflow whose
   last step is a check the agent can tell is done, a reference table, and one bad, then good
   example. Move detail that only some tasks need into `references/`.

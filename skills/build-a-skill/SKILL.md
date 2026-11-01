@@ -52,9 +52,10 @@ proves it with runs with and without the skill.
    (`git init`, then commit the scaffold) so the replay and the runs have a history to compare.
 5. **Write the skill.** Rewrite `skills/<name>/SKILL.md` from the capture notes only, following
    [writing-the-skill.md](references/writing-the-skill.md): a description that names the task
-   and the words a user would type when it should fire, one or two hard stops, a numbered
-   workflow that ends in a check, and references that hold each round as a pair: not like this,
-   like this, and why. Fill `agents/openai.yaml` and `.tessl-plugin/plugin.json`.
+   and the words a user would type when it should fire, one hard stop per correction, a numbered
+   workflow that ends in a check, and references that hold each round as a pair under the
+   headings "Not like this" and "Like this", with a one-sentence why. Fill
+   `agents/openai.yaml` and `.tessl-plugin/plugin.json`.
 6. **Write one eval per round.** In `evals-reference/`, one scenario per correction, as
    [evals.md](references/evals.md) describes: a task someone would type, with the trap in it and
    no hint; a checklist whose points sit on the habit. Run

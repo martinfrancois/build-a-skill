@@ -33,6 +33,8 @@ runs with a reference or regression task fails the validator as a duplicate. Run
 ## Gaps
 
 - evals-reference 01: deleted, moved to `evals/` as main 01 after the hosted run of 2026-10-21 (56 without the skill, 100 with)
+- evals-reference 02: deleted, moved to `evals/` as main 02 after the hosted runs of 2026-11-02 (25 without the skill, 100 with)
+- evals-reference 03: deleted, moved to `evals/` as main 03 after the hosted runs of 2026-11-02 (21 without the skill, 100 with)
 
 ## Current numbers
 
@@ -42,8 +44,8 @@ folder no longer exists.
 | Suite | Number | Scenario |
 |---|---|---|
 | main | 01 | `evals/01-java-upsert-capture` |
-| reference | 02 | `evals-reference/02-pull-request-description-capture` |
-| reference | 03 | `evals-reference/03-python-file-writes-two-rounds` |
+| main | 02 | `evals/02-pull-request-description-capture` |
+| main | 03 | `evals/03-python-file-writes-two-rounds` |
 | reference | 04 | `evals-reference/04-typescript-unknown-json-capture` |
 
 ## Local screening results (2026-10-21)
@@ -118,3 +120,50 @@ The registry eval of 0.1.2, run `01a1993d-ed11-728b-bf66-4ded8f4a9ed0`, scored m
 without the skill and 100 with it; its publish review gave 97. 0.1.3 rewrites the SKILL.md body
 more tightly, with the same steps and guards, and reviewed at 100 twice. Local screen with the
 skill on 0.1.3: 98, 97, 97.
+
+## Realistic scenarios and three main scenarios for 1.0.0 (2026-11-02)
+
+The registry listing gives a full aggregate score only to a main suite of three or more, and
+0.1.3 had one. Two scenarios were added (03, Python with two corrections; 04, TypeScript), and
+all four were rebuilt as real sessions: the project ships as a directory fixture, `setup.sh`
+rebuilds its git state as the session left it (the accepted version uncommitted, or for 02 a
+branch with the change to describe), and `task.md` holds the earlier turns and the user's
+request for a skill, with no list of files to write. The first hosted runs of that shape failed in setup, because Tessl uploads only declared
+scenario files; `setup.sh` now writes the accepted version itself.
+
+Hosted runs on the realistic scenarios, without the skill / with it. Each round follows a change
+to the skill text named in the last column; the quality review scored 100 before each round
+except f (97).
+
+| Round | 01 | 02 | 03 | 04 | Skill change before the round |
+| --- | --- | --- | --- | --- | --- |
+| b | 34 / 97 | 39 / 95 | 22 / 96 | 35 / 96 | evals ship code as fixtures |
+| c | 27 / 100 | 39 / 96 | 23 / 98 | 33 / 94 | three short trigger names, same kind of request |
+| d | 30 / 100 | 36 / 98 | 27 / timeout | 34 / 98 | whole correction as the hard stop |
+| e | 22 / 100 | 26 / 100 | 24 / 97 | 30 / 98 | `start_skill.sh`, replay time limit, no `tessl login` |
+| f | 34 / 100 | 33 / 99 | 25 / timeout | 40 / 94 | trigger names as a plain list, short prompts |
+| g | 24 / 97 | 35 / 100 | 29 / 96 | 29 / 96 | same language as the conversation |
+| h | 33 / 96 | 35 / 98 | 25 / 93 | 27 / 99 | examples from a habit no eval tests |
+| i | 28 / 100 | 31 / 100 | 22 / 98 | 28 / 96 | stop when no login or key; "Use for any of" list |
+| j | 30 / 100 | | 30 / 100 | 33 / 96 | every rule something the user said |
+| k | 31 / 100 | 25 / 100 | 21 / 100 | | 03 rebuilt on a habit the template does not teach; ask local screen or hosted first, run past the allowance |
+| l | 31 / 100 | 43 / 100 | 29 / 93 | | the local screen confines fixture paths and runs setup scripts only with `-x` (review 97) |
+| m | 31 / 100 | 27 / 100 | 20 / 100 | | step 8 names no model or price (review 100) |
+
+The two timeouts hit Tessl's 30-minute solve limit; in round h a run took 27 minutes because the
+agent patched `local_screen.sh` to use its own Claude credentials and screened twelve runs. The
+skill now stops and asks when there is no login or key.
+
+Until round j, 03 was a session about error messages, the habit the template's example skill
+teaches, so the copied template carried part of its answer. Round k ran it rebuilt on two
+corrections about writing files (pass an encoding, write beside the file and swap it in).
+
+Placement: 01, 02 and 03 form the main suite, all three at 100 with the skill in rounds k and m,
+round m on the text this release ships, and 69, 73 and 80 points lower without it there. In
+round l, 03 lost 7 points with the skill on trigger words, an encoding rule stretched to reads,
+and a faint hint in one eval task, so its 100 is not yet stable. 04 meets the delta in every
+round but scored 94 to 99 with the skill, so it stays in reference until a fix holds it at 100.
+
+Local screen of round k's text (DeepSeek V4.1 Flash, Haiku judge), two runs each: 03 at 25 and
+20 without the skill, 89 and 88 with it; 02 at 93 and 92 with it. The skill arm came out about
+ten points under the hosted run, as in October.

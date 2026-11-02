@@ -1,5 +1,5 @@
 {
-  "context": "Reference coverage: at the end of a Python session with two corrections about writing a file, the user asks for a skill. A good answer creates a repository next to inventory-service with a SKILL.md whose description names the task and the words a user would type, one hard stop per correction and nothing invented beyond them, a numbered workflow ending in a check, a references file with one not-like-this and like-this pair per round and its why, and at least three realistic eval scenarios, at least one per correction, in other domains, with no hint of the answer and their points on the habit each tests.",
+  "context": "Main eval: at the end of a Python session with two corrections about writing a file, the user asks for a skill. A good answer creates a repository next to inventory-service with a SKILL.md whose description names the task and the words a user would type, one hard stop per correction and nothing invented beyond them, a numbered workflow ending in a check, a references file with one not-like-this and like-this pair per round and its why, and at least three realistic eval scenarios, at least one per correction, in other domains, with no hint of the answer and their points on the habit each tests.",
   "type": "weighted_checklist",
   "checklist": [
     {

@@ -49,11 +49,14 @@ or in plain words: "turn these corrections into a skill". The skill then:
    and why;
 3. proposes a name and a directory for the new repository;
 4. copies the [template](skills/build-a-skill/assets/template/) there and writes `SKILL.md`,
-   its examples as "not like this, like this, why" pairs, and one eval scenario per round;
+   its examples as "not like this, like this, why" pairs, and at least three eval scenarios,
+   one or more per round;
 5. replays your first prompt at the commit before it, with the new skill installed, and
    compares the result with the version that stayed;
-6. runs the quality review and the evals until every with-skill scenario scores 100, with a stop
-   rule of three runs per scenario, and installs the skill.
+6. runs the quality review and the evals until the review and every with-skill scenario score
+   100 and at least three scenarios sit in the main suite, with a stop rule of three runs per
+   scenario, and installs the skill. The Tessl registry gives a full aggregate score only to a
+   main suite of three or more.
 
 The template's [README](skills/build-a-skill/assets/template/README.md) holds the same steps for
 doing them by hand.

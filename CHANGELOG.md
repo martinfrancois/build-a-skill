@@ -1,5 +1,50 @@
 # Changelog
 
+## 1.0.0 (2026-11-02)
+
+### Features
+
+* build-a-skill: writes at least three eval scenarios, one or more per correction, and finishes
+  only when the review scores 100 and at least three scenarios sit in the main suite at 100 with
+  the skill and 30 points lower without; the Tessl registry gives a full aggregate score only to
+  a main suite of three or more
+* build-a-skill: the evals it writes are realistic: the task is the message a user would send
+  about their own code, and that code ships with the scenario as a directory fixture in
+  `scenario.json`, with a `setup.sh` for git history, instead of being pasted into the prompt
+* build-a-skill: before the first hosted run it asks once whether to screen locally first with
+  DeepSeek V4.1 Flash, which saves Tessl credits, or to go straight to hosted runs, and follows
+  the answer; hosted runs go on past the monthly allowance and stop only when Tessl blocks them
+* template: `scripts/start_skill.sh <name>` renames the example skill, deletes the example
+  scenarios and empties the numbering table in one step
+* template: the repository it produces has an `AGENTS.md`, and a `CLAUDE.md` that imports it,
+  linking the rule pages, so agents find the credit policy and the local screening method
+* template: the local screen installs a scenario's fixtures and runs its setup scripts the way
+  Tessl does, and the validator accepts shipped project files in place of an `Assume` sentence
+* evals: every scenario now replays a real session: the project on disk with its git history as
+  the session left it, the earlier turns, and the user's request for a skill; two new scenarios
+  (Python with two corrections about writing files, TypeScript) and three in the main suite
+
+### Fixes
+
+* build-a-skill: a hard stop states the whole correction, what it rejected and what it asked
+  for; every rule is something the user said, so a helper the kept version happens to use or a
+  ban on the opposite of the request is not a rule; the description has four parts, with a
+  "Use for any of" list of at least five short keywords
+* build-a-skill: its own examples of trigger words come from a habit no eval tests, and
+  neither its SKILL.md nor the skills it writes carry a "When to use" section, which repeated
+  the description
+* build-a-skill: the replay runs under `timeout 600`; with no Tessl login, or no DeepSeek key
+  for a chosen local screen, it stops and asks the user, and never edits the scripts or swaps in
+  another model
+* template: the local screen's judge reads its prompt from stdin; a copied template made the
+  prompt too long for one command-line argument
+* template: the local screen keeps fixture paths inside the work directory, copies no symlinks,
+  and runs a scenario's setup scripts only with `-x`, in an empty environment
+* template: `run_eval_suite.sh` refuses a second run in the same checkout, which uploaded the
+  other run's staged scenarios
+* template: the example skill's pair uses the "Not like this" and "Like this" headings, and the
+  local screening doc no longer carries another repository's scores as if they were its own
+
 ## 0.1.3 (2026-11-02)
 
 ### Fixes

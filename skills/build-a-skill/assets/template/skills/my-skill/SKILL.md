@@ -1,6 +1,6 @@
 ---
 name: my-skill
-description: Writes and reviews code that follows this team's convention for error messages. Use whenever code raises, throws, returns, or logs an error, or a change or review touches error handling, in any language, even if the user never says "error message" or "convention".
+description: Writes and reviews code that follows this team's convention for error messages. Use for any of error message, raise, throw, exception, error handling, log error, validation error, even if the user never says convention, cannot, or offending value. Not for success messages, info or debug log lines, or user interface copy.
 license: MIT
 ---
 
@@ -18,12 +18,6 @@ Never put a secret into an error message or log line: passwords, tokens, API key
 IDs, card numbers, or URLs that carry credentials. Name the field and leave its value out. This
 rule beats every step below, and [hard-stops.md](references/hard-stops.md) lists what counts as a
 secret.
-
-## When to use
-
-- Writing code that raises, throws, returns, or logs an error.
-- Changing or reviewing existing error handling.
-- Cleaning up messages that came from another codebase or a generator.
 
 ## Workflow
 
@@ -53,17 +47,17 @@ code, write the requested file first, then explain.
 
 ## Example
 
-Bad:
+### Not like this
 
 ```python
 raise ValueError(f"Error: invalid due date {raw}!")
 ```
 
-Good:
+### Like this
 
 ```python
 raise ValueError(f'cannot parse due date "{raw}": expected a calendar date as YYYY-MM-DD')
 ```
 
-The good version names what failed, shows the value the caller sent, and tells them how to fix
-it.
+Why: the caller sees the message without the code, so it has to say what failed, the value they
+sent, and how to fix it.

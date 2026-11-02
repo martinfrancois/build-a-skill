@@ -3,20 +3,22 @@
 ## Scope
 
 Use this to run eval scenarios against the model behind Tessl's default solver on your own
-machine, for one to two cents a run, before spending Tessl credits or when the monthly credit
-allowance is used up (see [Credits](../../README.md#credits)). It covers setup, the commands, how
-to read the output, and how to tune the skill against it. It does not replace hosted runs:
-benchmark claims, release-readiness claims, and the registry score still come from Tessl.
+machine, for one to two cents a run. Use it when the user chose to screen locally before hosted
+runs ([Workflow](workflow.md) says when to ask), or when Tessl blocks hosted runs:
+`credits.blocked` is true in `tessl org usage --json`, or a run is refused with "run out of
+credits". Going over the monthly allowance is not a reason to switch; Tessl keeps accepting runs
+then (see [Credits](../../README.md#credits)). This page covers setup, the commands, how to read
+the output, and how to tune the skill against it. It does not replace hosted runs: benchmark
+claims, release-readiness claims, and the registry score still come from Tessl.
 
 ## Why This Works
 
 Tessl's default solver is `deepseek-v4.1-flash`. DeepSeek's own API serves the same model as
 `deepseek-flash` and offers an Anthropic-compatible endpoint, so the `claude` CLI can drive it
-unchanged with two environment variables. The author's `java-streams-skill` repository checked
-the screen against hosted runs in October 2026: on its former main scenarios the hosted baseline
-arm scored 100 where local runs scored 100, 94, 97, and 100, and on its two current main
-scenarios the hosted baseline scored 26 and 60 where the local screen had predicted 30 and 69.
-That is close enough to decide placement.
+unchanged with two environment variables. Same model, same task, same files: that is why the
+baseline arm lands near Tessl's baseline arm. This repository has no comparison of its own until
+its first hosted run; once one exists, write both numbers next to each other in the suite's
+`NUMBERING.md`.
 
 The harness differs from Tessl in three ways. The agent runs in Claude Code in restricted mode
 (no Bash, no web, file tools confined to the work directory, edits accepted, 40 turns); Tessl runs
@@ -28,9 +30,8 @@ directions.
 
 ## Setup
 
-1. Create an API key at <https://platform.deepseek.com/> and add credit. A run costs one to two
-   US cents; ten US dollars covered about seven hundred runs in October 2026. DeepSeek halves the
-   price in its off-peak window; the current window is on
+1. Create an API key at <https://platform.deepseek.com/> and add credit. A run costs one to two US
+   cents. DeepSeek halves the price in its off-peak window; the current window is on
    <https://api-docs.deepseek.com/quick_start/pricing/>.
 2. Store the key alone, with no comment line and no trailing text, in `~/deepseek-api-key` and
    make it private:
@@ -56,13 +57,13 @@ versions.
 
 ```bash
 # baseline arm, no skill: the arm that decides suite placement
-scripts/local_screen.sh -n 2 -p 4 evals-reference/<scenario>
+scripts/local_screen.sh -x -n 2 -p 4 evals-reference/<scenario>
 
 # with the skill from the working tree copied into the agent's .claude/skills/
-scripts/local_screen.sh -m skill -n 2 -p 4 evals/*/ evals-reference/*/
+scripts/local_screen.sh -x -m skill -n 2 -p 4 evals/*/ evals-reference/*/
 
 # more runs for a scenario whose two runs disagree
-scripts/local_screen.sh -n 4 -s 3 evals-reference/<scenario>     # runs 3 to 6
+scripts/local_screen.sh -x -n 4 -s 3 evals-reference/<scenario>  # runs 3 to 6
 
 # one line per scenario: run count, mean, min, max
 scripts/local_screen.sh --summary
@@ -71,10 +72,18 @@ scripts/local_screen.sh --summary -m skill
 
 What one run does:
 
-1. Creates an empty work directory and passes the scenario's `task.md` as the prompt (skill mode
-   also copies the one skill under `skills/` into `.claude/skills/` of that directory and prefixes the
-   prompt with one line asking the agent to use it). An existing run directory is never deleted;
-   rerun with `-s` and new run numbers.
+1. Creates an empty work directory, installs the scenario's files the way Tessl does (directory
+   fixtures from `scenario.json`, then `resources/`, then `setup.sh` run in that directory; commit
+   fixtures are not supported locally), and passes the scenario's `task.md` as the prompt (skill
+   mode also copies the one skill under `skills/` into `.claude/skills/` of that directory and
+   prefixes the prompt with one line asking the agent to use it). An existing run directory is
+   never deleted; rerun with `-s` and new run numbers. A path in `scenario.json` must be relative
+   with no `..`, and a fixture may hold no symlinks, so nothing is copied outside the work
+   directory. Setup scripts run on this machine with your account, so they run only with `-x`;
+   without it a scenario that has one stops with a message. Pass `-x` for scenarios you wrote,
+   and read `setup.sh` first in a scenario from someone else. The script runs with an empty
+   environment apart from `PATH` and a temporary `HOME`, which keeps this script's variables out
+   of it, but it can still read any file your account can.
 2. Runs `claude -p --model deepseek-flash` with `ANTHROPIC_BASE_URL=https://api.deepseek.com/anthropic`
    and the key from the file, `--max-turns 40`, a 15-minute timeout, JSON output saved as
    `solver.json`. The solver runs with `--restricted --permission-mode acceptEdits
@@ -84,13 +93,14 @@ What one run does:
    agent; the key reaches only the DeepSeek API call. The agent cannot compile either, which
    matches Tessl's judge grading the files as written.
 3. Calls `scripts/local_screen_judge.py`, which sends the task, the checklist from `criteria.json`,
-   the files the agent wrote (skipping `.class` files, anything under `.claude/`, and files over
-   60,000 bytes, with the API key redacted if the agent copied it anywhere) to the judge, and
-   saves the item scores as `assessment.json` in the same shape as one Tessl solution. The
-   agent's final message is left out, because Tessl's judge grades only the files: a task that
-   asks for an explanation is only satisfied by an explanation in a file. Set
-   `LOCAL_SCREEN_JUDGE_MESSAGE=1` to include the message when comparing with an older run. The console shows the
-   total and one `lost` line per item that lost points, with the judge's reason.
+   and every file in the work directory to the judge: the installed fixture files and the files
+   the agent wrote. It skips symlinks, `.class` files, anything under `.claude/` or `.git/`,
+   files named `CLAUDE.md`, and files over 60,000 bytes, and redacts the API key if the agent
+   copied it anywhere. It saves the item scores as `assessment.json` in the same shape as one Tessl
+   solution. The agent's final message is left out, because Tessl's judge grades only the files:
+   a task that asks for an explanation is only satisfied by an explanation in a file. Set
+   `LOCAL_SCREEN_JUDGE_MESSAGE=1` to include the message when comparing with an older run. The
+   console shows the total and one `lost` line per item that lost points, with the judge's reason.
 
 Six parallel runs are fine on an ordinary developer machine; each solver run is one `claude`
 process waiting on the network. A full pass over fifty scenarios, two runs each, takes about

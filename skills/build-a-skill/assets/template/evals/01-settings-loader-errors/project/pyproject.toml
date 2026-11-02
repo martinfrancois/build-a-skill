@@ -1,0 +1,4 @@
+[project]
+name = "orders-service"
+version = "2.3.0"
+requires-python = ">=3.12"

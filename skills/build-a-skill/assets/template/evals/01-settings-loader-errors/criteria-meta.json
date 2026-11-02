@@ -5,7 +5,7 @@
     "evidence_type": "ordinary_lift"
   },
   "categories": {
-    "Creates coherent settings.py artifact": "safety",
+    "Completes a coherent settings.py": "safety",
     "Preserves validation behavior": "safety",
     "Names the failed operation first": "quality",
     "Quotes the offending value": "quality",

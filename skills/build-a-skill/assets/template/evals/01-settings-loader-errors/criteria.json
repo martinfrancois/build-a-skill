@@ -3,14 +3,14 @@
   "type": "weighted_checklist",
   "checklist": [
     {
-      "name": "Creates coherent settings.py artifact",
+      "name": "Completes a coherent settings.py",
       "max_score": 5,
-      "description": "Creates settings.py with load_settings(env) and a frozen Settings dataclass, using only the Python 3.12 standard library."
+      "description": "Implements load_settings(env) in orders/settings.py, keeps the frozen Settings dataclass and its four fields, and uses only the standard library."
     },
     {
       "name": "Preserves validation behavior",
       "max_score": 10,
-      "description": "Returns Settings with parsed int port and workers, raises ValueError for a missing or invalid PORT, LOG_LEVEL, or DATABASE_URL and for an invalid WORKERS, checks in the listed order, and defaults WORKERS to 4."
+      "description": "Returns Settings with parsed int port and workers, raises ValueError for a missing or invalid PORT, LOG_LEVEL, or DATABASE_URL and for an invalid WORKERS, checks them in the order the README lists, and defaults WORKERS to 4."
     },
     {
       "name": "Names the failed operation first",
@@ -40,7 +40,7 @@
     {
       "name": "Keeps implementation focused",
       "max_score": 5,
-      "description": "Adds no third-party dependencies, custom exception hierarchy, logging setup, or settings beyond the four requested."
+      "description": "Adds no third-party dependencies, custom exception hierarchy, logging setup, or settings beyond the four in the README."
     }
   ]
 }

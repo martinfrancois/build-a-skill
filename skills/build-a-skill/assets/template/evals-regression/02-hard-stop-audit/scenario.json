@@ -1,0 +1,6 @@
+{
+  "description": "The accounts service whose password reset messages the audit is about.",
+  "fixtures": {
+    "project": { "type": "directory", "path": "./project", "installPath": "accounts-service" }
+  }
+}

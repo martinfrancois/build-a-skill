@@ -15,7 +15,7 @@ A scenario is a folder name, or a path inside the folder of the suite named firs
 
 Examples:
   scripts/run_eval_suite.sh main -- --label "main check"
-  scripts/run_eval_suite.sh reference 01-webhook-error-review -- --label "targeted reference"
+  scripts/run_eval_suite.sh reference <scenario> -- --label "targeted reference"
   scripts/run_eval_suite.sh regression -- --label "regression safety"
 
 The runs use the current Tessl default solver; `tessl eval run --list-agents` shows it. Picking
@@ -112,6 +112,20 @@ if [[ -z "$skill_name" ]]; then
   skill_name="$(basename "$(dirname "${skill_files[0]}")")"
 fi
 
+# Tessl uploads whatever evals/ holds when it starts, and a staged run swaps that folder out, so
+# two runs in one checkout would upload each other's scenarios. A lock folder in the git
+# directory makes the second run stop instead.
+lock_dir="$(git -C "$repo_root" rev-parse --absolute-git-dir 2>/dev/null || printf '%s' "$repo_root")/run_eval_suite.lock"
+if ! mkdir "$lock_dir" 2>/dev/null; then
+  echo "Another run_eval_suite.sh is using evals/ in this checkout ($lock_dir)." >&2
+  echo "Start the next run once that one has printed its run id, or remove the folder if no run is going." >&2
+  exit 1
+fi
+release_lock() {
+  rmdir "$lock_dir" 2>/dev/null
+}
+trap release_lock EXIT
+
 # Prints the scenarios in evals/, then runs tessl against the repository as a plugin.
 run_staged_evals() {
   local scenario
@@ -191,6 +205,7 @@ restore() {
     mv "$backup_evals" "$staged_evals"
   fi
   rm -rf "${tmp_dir:?}"
+  release_lock
 }
 trap restore EXIT
 

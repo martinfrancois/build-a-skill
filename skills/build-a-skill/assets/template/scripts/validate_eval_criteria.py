@@ -26,6 +26,7 @@ from eval_common import (
     checklist_items,
     error,
     load_criteria,
+    load_json,
     normalized_words,
     scenario_wording,
     skill_context_phrase,
@@ -77,8 +78,9 @@ DOMAIN_IDENTIFIERS = {
     "timeouterror",
     "valueerror",
 }
-# Every task.md needs a sentence like "Assume Python 3.12." so both variants target the same
-# version or environment.
+# Both variants must target the same version or environment. A scenario that ships the user's
+# project (scenario.json fixtures, include or setup, a resources/ folder, or a setup.sh) carries
+# it in those files; any other task.md needs a sentence like "Assume Python 3.12."
 ENVIRONMENT_PATTERN = re.compile(r"^Assume\s+\S.*$|[.!?]\s+Assume\s+\S", re.MULTILINE)
 ANSWER_KEY_MARKERS = (
     "Eval Cases",
@@ -108,10 +110,15 @@ BEHAVIOR_WORDS = (
     "output",
     "order",
 )
-# A runtime reference that shares a run of this many words with a scenario's task, capability, or
-# criteria, code included, counts as overlap. Five words catch a copied phrase without flagging
+# A runtime reference that shares a run of this many words with a scenario's task, capability,
+# criteria, or shipped files counts as overlap. Five words catch a copied phrase without flagging
 # common pairs.
 PHRASE_WORDS = 5
+# The overlap check skips shipped files of this many bytes or more; they hold data, not code.
+SHIPPED_FILE_LIMIT = 60_000
+# In shipped files with these suffixes, only code blocks and code spans count as identifiers, as
+# in task.md; every other shipped file is read as code.
+PROSE_SUFFIXES = (".md", ".markdown", ".rst", ".txt")
 # A main task is a duplicate when this share of its own eight-word runs also appears in a
 # reference or regression task, so the same scenario would count twice.
 DUPLICATE_TASK_SIMILARITY = 0.85
@@ -194,17 +201,60 @@ class Scenario:
     task_text: str
     capability_text: str
     data: dict[str, Any] | None
+    spec: dict[str, Any]
     load_failures: list[str] = field(default_factory=list)
 
     @classmethod
     def read(cls, path: Path) -> Scenario:
         criteria_file = path / "criteria.json"
         data, failures = load_criteria(criteria_file) if criteria_file.is_file() else (None, [])
-        return cls(path, read_text(path / "task.md"), read_text(path / "capability.txt"), data, failures)
+        spec_file = path / "scenario.json"
+        spec, spec_failures = load_json(spec_file) if spec_file.is_file() else ({}, [])
+        return cls(
+            path,
+            read_text(path / "task.md"),
+            read_text(path / "capability.txt"),
+            data,
+            spec or {},
+            failures + spec_failures,
+        )
 
     @property
     def suite(self) -> str:
         return self.path.parent.name
+
+    @property
+    def ships_files(self) -> bool:
+        """True when Tessl installs files for this scenario, so the files define the environment."""
+        declared = any(self.spec.get(key) for key in ("fixtures", "include", "setup"))
+        return declared or (self.path / "resources").is_dir() or (self.path / "setup.sh").is_file()
+
+    @property
+    def shipped_files(self) -> list[Path]:
+        """The files Tessl installs or runs for this scenario, as local_screen.sh installs them."""
+        fixtures = self.spec.get("fixtures")
+        roots = [
+            self.path / str(fixture.get("path", ""))
+            for fixture in (fixtures.values() if isinstance(fixtures, dict) else [])
+            if isinstance(fixture, dict) and fixture.get("type") == "directory" and fixture.get("path")
+        ]
+        include = self.spec.get("include")
+        if isinstance(include, list):
+            roots.extend(self.path / str(entry) for entry in include)
+        else:
+            roots.append(self.path / "resources")
+        setup = self.spec.get("setup")
+        roots.extend(self.path / str(script) for script in (setup if isinstance(setup, list) else []))
+        roots.append(self.path / "setup.sh")
+        files: list[Path] = []
+        for root in roots:
+            if root.is_file():
+                files.append(root)
+            elif root.is_dir():
+                files.extend(
+                    path for path in sorted(root.rglob("*")) if path.is_file() and ".git" not in path.parts
+                )
+        return list(dict.fromkeys(path.resolve() for path in files))
 
     @property
     def criteria_file(self) -> Path:
@@ -272,7 +322,12 @@ def task_similarity(candidate: str, other: str) -> float:
 
 
 def domain_identifiers(text: str) -> set[str]:
-    identifiers = set(re.findall(r"\b[A-Za-z_][A-Za-z0-9_]*\b", code_like_text(text)))
+    """Identifiers in the code blocks and code spans of a Markdown text."""
+    return code_identifiers(code_like_text(text))
+
+
+def code_identifiers(code: str) -> set[str]:
+    identifiers = set(re.findall(r"\b[A-Za-z_][A-Za-z0-9_]*\b", code))
     return {
         identifier
         for identifier in identifiers
@@ -284,6 +339,22 @@ def domain_identifiers(text: str) -> set[str]:
 
 def api_markers(text: str) -> set[str]:
     return set(re.findall(r"\b[A-Z][A-Za-z0-9_]*(?:\.[A-Za-z_][A-Za-z0-9_]*)+\b", text))
+
+
+def shipped_text(scenario: Scenario) -> tuple[str, set[str]]:
+    """Return the text of the scenario's shipped text files and the identifiers in their code."""
+    texts: list[str] = []
+    identifiers: set[str] = set()
+    for path in scenario.shipped_files:
+        if path.stat().st_size >= SHIPPED_FILE_LIMIT:
+            continue
+        try:
+            text = path.read_text(encoding="utf-8")
+        except UnicodeDecodeError:
+            continue
+        texts.append(text)
+        identifiers |= domain_identifiers(text) if path.suffix in PROSE_SUFFIXES else code_identifiers(text)
+    return "\n".join(texts), identifiers
 
 
 def format_category_points() -> str:
@@ -401,10 +472,10 @@ def validate_scenario(scenario: Scenario) -> list[str]:
                 )
 
     task_text = scenario.task_text
-    if task_text and not ENVIRONMENT_PATTERN.search(task_text):
+    if task_text and not scenario.ships_files and not ENVIRONMENT_PATTERN.search(task_text):
         failures.append(
             f"{task_file}: task must state the version or environment to assume, "
-            "e.g. 'Assume Python 3.12.'"
+            "e.g. 'Assume Python 3.12.', or ship the project it works on (fixtures in scenario.json)"
         )
     names_skill = any(re.search(pattern, task_text, re.IGNORECASE) for pattern in EXPLICIT_INVOCATION_PATTERNS)
     if invocation == "natural" and names_skill:
@@ -459,12 +530,18 @@ def validate_runtime_reference_overlap(scenarios: list[Scenario]) -> list[str]:
         focused = FOCUSED_EVIDENCE.get(scenario.suite)
         if focused is None or not scenario.task_text:
             continue
+        files_text, files_identifiers = shipped_text(scenario)
         wording = f"{scenario_wording(scenario.task_text, scenario.data)}\n{scenario.capability_text}"
-        shared_identifiers = sorted(domain_identifiers(scenario.task_text) & runtime_identifiers)
-        shared_phrases = sorted(
-            " ".join(gram) for gram in ngrams(normalized_words(wording), PHRASE_WORDS) & runtime_phrases
+        shared_identifiers = sorted(
+            (domain_identifiers(scenario.task_text) | files_identifiers) & runtime_identifiers
         )
-        shared_api_markers = sorted(api_markers(scenario.task_text) & runtime_api_markers)
+        shared_phrases = sorted(
+            " ".join(gram)
+            for gram in ngrams(normalized_words(f"{wording}\n{files_text}"), PHRASE_WORDS) & runtime_phrases
+        )
+        shared_api_markers = sorted(
+            api_markers(f"{scenario.task_text}\n{files_text}") & runtime_api_markers
+        )
         has_overlap = (
             len(shared_identifiers) >= 4
             or bool(shared_phrases)
@@ -481,8 +558,8 @@ def validate_runtime_reference_overlap(scenarios: list[Scenario]) -> list[str]:
         rationale = scenario.metadata.get("runtime_reference_overlap_rationale")
         if scenario.metadata.get("evidence_type") != focused:
             failures.append(
-                f"{scenario.path}: task, capability, or criteria overlap the runtime references "
-                f"({details}); move the reference example to another domain, or set "
+                f"{scenario.path}: task, capability, criteria, or shipped files overlap the runtime "
+                f"references ({details}); move the reference example to another domain, or set "
                 f"metadata.evidence_type={focused} with a runtime_reference_overlap_rationale"
             )
         elif not (isinstance(rationale, str) and rationale.strip()):

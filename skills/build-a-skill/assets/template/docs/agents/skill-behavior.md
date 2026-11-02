@@ -8,17 +8,22 @@ Editing `skills/my-skill/SKILL.md`, its references, or `skills/my-skill/agents/o
 
 - Write the skill from the issue that describes the failure, never from an eval's
   `criteria.json`. A skill copied from criteria passes its own test and teaches nothing else.
-- The `description` decides when an agent loads the skill. Write it in the third person, name
-  what the skill does, then list the situations that should trigger it with "Use whenever ...,
-  even if the user never says ...". Among the trigger words, give the short names people use for
-  the habit ("error message", "raise"), not only a description of what the code does. Keep it
-  under 1,024 characters.
-- Keep `SKILL.md` short: when to use, the hard stop near the top, a numbered workflow whose
-  last step is a check the agent can tell is done, a reference table, and one bad, then good
-  example. Move detail that only some tasks need into `references/`.
-- A hard stop is a rule that beats every other step, and each one is a correction the user made,
-  in what it said and nothing more. Keep at most two; a long list of hard stops means none of
-  them stands out.
+- The `description` decides when an agent loads the skill. Write it in the third person, in four
+  parts, under 1,024 characters:
+  1. What the skill does.
+  2. "Use for any of" and at least five short keywords, one to three words each, the way people
+     type them in a request ("error message", "raise"), not a description of what the code does.
+  3. "even if the user never says" and the words of the fix.
+  4. "Not for" and the nearest task the skill should not fire on.
+
+  The front matter is YAML, so a colon followed by a space breaks an unquoted description, and
+  `tessl skill lint` does not notice. Use a full stop or a semicolon, or quote the whole value.
+- Keep `SKILL.md` short: the hard stop near the top, a numbered workflow whose last step is a
+  check the agent can tell is done, a reference table, and one bad, then good example. Move
+  detail that only some tasks need into `references/`.
+- A hard stop is a rule that beats every other step, and each one is a correction the user made:
+  what it rejected and what it asked for instead, nothing more. Keep at most two; a long list of
+  hard stops means none of them stands out.
 - Runtime references must not contain answer keys: no eval scenario names, expected outputs,
   scoring rubrics, run IDs, or score claims. The validator rejects the common markers.
 - Examples in references use a different domain from every eval task, so a high score shows the

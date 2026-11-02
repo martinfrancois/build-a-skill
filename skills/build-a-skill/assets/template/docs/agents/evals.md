@@ -10,8 +10,10 @@ much the skill helps.
 ### Honesty
 
 - Don't cheat. A score is only worth something if the run could have failed.
-- Don't leak the fix in `task.md`. Write the prompt a user would type: the task, the version or
-  environment, and the inputs. Never the diagnosis, the convention, or the shape of the answer.
+- Don't leak the fix in `task.md`. Write the message a user would send about their own code:
+  one or two sentences naming the file and the change. Never the diagnosis, the convention, the
+  shape of the answer, or the quality the habit delivers, and nothing a user would not type, such
+  as a list of requirements or of files to write.
 - Never edit `criteria.json` to make a run pass. If a criterion is unfair (it asks for something
   the task never required, or rejects a correct answer), fix it as its own `fix(evals)` commit
   with the reason, then rerun both variants.
@@ -23,10 +25,23 @@ much the skill helps.
 
 ### Scenario format
 
-- Each scenario folder holds four files:
-  - `task.md` starts with a `#` heading, contains an `Assume` sentence that names the version or
-    environment (`Assume Python 3.12.`), and asks for a named file such as `settings.py` or
-    `review.md`.
+- Each scenario folder holds four files, plus the code the task works on when there is any:
+  - `task.md` is the user's message. It asks for a named file such as `settings.py` or
+    `review.md`, or names the files it works on.
+  - Code the task works on ships as files, never pasted into `task.md`: a folder beside
+    `task.md`, here `project/`, declared in `scenario.json` as a directory fixture:
+
+    ```json
+    {"fixtures": {"project": {"type": "directory", "path": "./project", "installPath": "shop"}}}
+    ```
+
+    Tessl copies `project/` into `shop/` in the working directory, so `task.md` names files as
+    `shop/...`. Add a `setup.sh` when the task needs git history; Tessl runs it in the working
+    directory after installing the fixture. It uploads only the declared files, so `setup.sh`
+    writes any later version of a file itself instead of copying it from the scenario folder.
+    The project's own files (`pyproject.toml`, `pom.xml`, `tsconfig.json`) set the version. A
+    task that ships nothing needs an `Assume` sentence (`Assume Python 3.12.`), which the
+    validator checks; a `scenario.json` with only a `description` ships nothing.
   - `capability.txt` is one line naming the capability under test.
   - `criteria.json` is a Tessl `weighted_checklist`: `context`, `type`, and `checklist` items with
     `name`, `description`, and `max_score`. Nothing else, so `tessl eval lint` stays clean.
@@ -71,6 +86,8 @@ much the skill helps.
   ```
 
   Promotion to `evals/` needs 100 with the skill and a delta of at least 30 percentage points.
+  The Tessl registry gives a full aggregate score only with three or more scenarios in `evals/`,
+  so keep at least three there.
   Move the folder rather than copy it: a main task that shares 85% or more of its eight-word runs
   with a reference or regression task fails the validator as a duplicate.
   [NUMBERING.md](../../evals/NUMBERING.md) has the full rule and the numbering scheme.
@@ -80,16 +97,17 @@ much the skill helps.
 - No answer keys in `skills/my-skill/references/`: no scenario names, expected outputs, rubrics,
   run IDs, or scores.
 - A scenario that shares code identifiers with a runtime reference, or a run of five words with
-  it anywhere in its task, capability, or criteria (code included), is not ordinary lift. The validator flags
-  it; move the reference example to another domain, or classify the scenario as focused
-  evidence with a written `runtime_reference_overlap_rationale`.
+  it anywhere in its task, capability, criteria, or the files it ships (fixtures, `resources/`,
+  setup scripts), is not ordinary lift. The validator flags it; move the reference example to
+  another domain, or classify the scenario as focused evidence with a written
+  `runtime_reference_overlap_rationale`.
 
 ### Spending credits
 
 - Freeze the skill text before measuring. Any edit to the skill or its references invalidates
   every run made before it.
-- Run the quality review to 100 first, then targeted scenarios, then full suites. The order and
-  commands are in [Workflow](workflow.md).
+- Run the quality review to 100 first, then targeted scenarios, then full suites. The order,
+  the commands, and when credits stop a hosted run are in [Workflow](workflow.md).
 - If the baseline already scores high, check whether the task is too easy before changing the
   skill.
 

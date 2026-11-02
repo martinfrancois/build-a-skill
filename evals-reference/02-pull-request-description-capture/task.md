@@ -1,20 +1,8 @@
-# Make a skill out of these corrections
+Earlier in this session, in `gateway-limits/`:
 
-Below is the record of a conversation with a coding agent that was asked to write a pull
-request description: the first prompt, what the agent wrote, the correction, and the version
-that stayed. Turn it into a skill folder. Assume the Agent Skills format (a `SKILL.md` with
-`name` and `description` in its front matter).
+**Me:** Open a pull request for this branch.
 
-Write these files and nothing else: `skills/<name>/SKILL.md`, `skills/<name>/references/examples.md`,
-and one eval scenario as `evals-reference/01-<slug>/task.md` and `evals-reference/01-<slug>/criteria.json`
-(a weighted checklist: `context`, `type`, and `checklist` items with `name`, `description`,
-`max_score`). Choose the name. Do not run anything.
-
-## First prompt
-
-> Open a pull request for this branch.
-
-## What the agent wrote as the description
+**You:** Opened #214 with this description:
 
 ```markdown
 ## Changes
@@ -25,12 +13,10 @@ and one eval scenario as `evals-reference/01-<slug>/task.md` and `evals-referenc
 - Bumped `pom.xml`
 ```
 
-## The correction, in the user's words
+**Me:** A list of files tells the reviewer nothing. Lead with why the change exists, then what
+changed in behavior, then how you verified it. The diff already lists the files.
 
-> A list of files tells the reviewer nothing. Lead with why the change exists, then what
-> changed in behavior, then how you verified it. The diff already lists the files.
-
-## The version that stayed
+**You:** Updated the description of #214:
 
 ```markdown
 Clients that retried after a 429 were counted twice, so a burst of retries locked them out
@@ -43,4 +29,5 @@ Verified with a new test that replays the same request id three times and sees o
 with the existing limiter suite.
 ```
 
-The user accepted this and said nothing more.
+**Me:** Good. Make this a skill so the next PR description comes out like that. Put it next to
+gateway-limits.

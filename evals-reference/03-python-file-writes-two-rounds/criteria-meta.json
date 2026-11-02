@@ -1,0 +1,17 @@
+{
+  "metadata": {
+    "invocation": "natural",
+    "task_type": "implementation",
+    "evidence_type": "ordinary_lift"
+  },
+  "categories": {
+    "Creates the skill and its evals next to inventory-service": "safety",
+    "Description names the task and the trigger words": "quality",
+    "One hard stop per correction, nothing invented": "quality",
+    "Workflow ends in a check": "quality",
+    "References carry both pairs and their why": "quality",
+    "Evals are realistic, one or more per correction, with no hint": "quality",
+    "Eval checklists weight the habit": "quality",
+    "Nothing speculative, copied, or invented": "maintainability"
+  }
+}

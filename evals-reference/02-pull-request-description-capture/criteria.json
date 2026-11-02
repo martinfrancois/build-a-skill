@@ -1,16 +1,16 @@
 {
-  "context": "Reference coverage: a skill written from a one-round conversation about pull request descriptions, not code. A good answer writes a SKILL.md whose description names the task and the words a user would type, a hard stop that comes from the correction and nothing invented beyond it, a numbered workflow ending in a check, a references file with the not-like-this and like-this pair and the why, and one eval whose task is a different change than the conversation's, carries no hint of the answer, and weights the habit.",
+  "context": "Reference coverage: at the end of a session where the agent opened a pull request and the user corrected its description, the user asks for a skill. A good answer creates a repository next to gateway-limits with a SKILL.md whose description names the task and the words a user would type, a hard stop that is the correction and nothing invented beyond it, a numbered workflow ending in a check, a references file with the not-like-this and like-this pair and the why, and at least three realistic eval scenarios for that correction about other changes, with no hint of the answer and their points on the habit.",
   "type": "weighted_checklist",
   "checklist": [
     {
-      "name": "Writes the four files with valid front matter",
+      "name": "Creates the skill and its evals next to gateway-limits",
       "max_score": 15,
-      "description": "Creates skills/<name>/SKILL.md with front matter holding a kebab-case name and a description, skills/<name>/references/examples.md, and one evals-reference/01-<slug>/ folder holding task.md and a criteria.json that parses as a weighted checklist."
+      "description": "A new folder beside gateway-limits holds skills/<name>/SKILL.md with front matter giving a kebab-case name and a description, skills/<name>/references/examples.md, and eval scenario folders each with a task.md and a criteria.json that parses as a weighted checklist, in whichever suite folder the repository starts them (a new scenario usually starts outside the main suite). gateway-limits and its branch are left as they were."
     },
     {
       "name": "Description names the task and the trigger words",
       "max_score": 15,
-      "description": "The description says in the third person what the skill does (writing the description of a pull request or merge request) and lists situations in the words a user would type, such as open a PR, write the PR body, describe this change, ending with a phrase like even if the user never asks for a structure, and says what it is not for."
+      "description": "The description says in the third person what the skill does (writing the description of a pull request or merge request) and lists at least three short names a user would type, such as open a PR, write the PR body, describe this change; the list of situations ends with a phrase like even if the user never asks for a structure, and a last clause says what it is not for."
     },
     {
       "name": "Hard stop traces to the correction",
@@ -28,19 +28,19 @@
       "description": "references/examples.md shows the file list under a not-like-this heading and the why-what-verified version under a like-this heading, in the conversation's own domain, with a one-sentence why taken from the correction."
     },
     {
-      "name": "Eval task is realistic, in another domain, and gives nothing away",
+      "name": "Eval tasks are realistic, about other changes, and give nothing away",
       "max_score": 15,
-      "description": "The eval task.md is a prompt someone would type (a branch or diff summary and a request for the pull request description), is about a different change than a rate limiter, and does not say to lead with why, to describe behavior, to mention verification, or to avoid a file list."
+      "description": "There are at least three eval scenarios, each testing the pull request description correction. Each task.md reads as a message someone would type, such as a request to open a pull request or write its description, with the repository and branch it is about shipped as files beside task.md (a project folder, fixture, or setup script) rather than summarized in a brief. Each is about a different change than a rate limiter, and none says to lead with why, to describe behavior, to mention verification, or to avoid a file list."
     },
     {
-      "name": "Eval checklist weights the habit",
+      "name": "Eval checklists weight the habit",
       "max_score": 10,
-      "description": "criteria.json gives most of its points to the habit (why first, behavior change next, verification last, no file list) and a minority to accuracy against the given change and scope."
+      "description": "Each criteria.json gives most of its points to the habit (why first, behavior change next, verification last, no file list) and a minority to accuracy against the given change and scope."
     },
     {
-      "name": "Nothing speculative or copied",
+      "name": "Nothing speculative, copied, or invented",
       "max_score": 5,
-      "description": "The skill text does not quote the eval's change or identifiers, does not mention scores or scenarios, and does not promise behaviors the conversation never showed."
+      "description": "The skill text does not quote the evals' changes or identifiers, does not mention scores or scenarios, and does not promise behaviors the conversation never showed; no file reports a score or a run that did not happen."
     }
   ]
 }

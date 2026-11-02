@@ -1,16 +1,16 @@
 {
-  "context": "Reference coverage: a skill written from a one-round conversation about a Java lookup. A good answer writes a SKILL.md whose description names the task and the words a user would type, a hard stop that comes from the correction and nothing invented beyond it, a numbered workflow ending in a check, a references file with the not-like-this and like-this pair and the why, and one eval whose task is in another domain than the conversation, carries no hint of the answer, and weights the habit.",
+  "context": "Main eval: at the end of a Java session with one correction, the user asks for a skill. A good answer creates a repository next to ticket-desk with a SKILL.md whose description names the task and the words a user would type, a hard stop that is the correction and nothing invented beyond it, a numbered workflow ending in a check, a references file with the not-like-this and like-this pair and the why, and at least three realistic eval scenarios for that correction in other domains, with no hint of the answer and their points on the habit. The session's own code stays as the user accepted it.",
   "type": "weighted_checklist",
   "checklist": [
     {
-      "name": "Writes the four files with valid front matter",
+      "name": "Creates the skill and its evals next to ticket-desk",
       "max_score": 15,
-      "description": "Creates skills/<name>/SKILL.md with front matter holding a kebab-case name and a description, skills/<name>/references/examples.md, and one evals-reference/01-<slug>/ folder holding task.md and a criteria.json that parses as a weighted checklist."
+      "description": "A new folder beside ticket-desk holds skills/<name>/SKILL.md with front matter giving a kebab-case name and a description, skills/<name>/references/examples.md, and eval scenario folders each with a task.md and a criteria.json that parses as a weighted checklist, in whichever suite folder the repository starts them (a new scenario usually starts outside the main suite). ticket-desk keeps the accepted stream version of findOrOpenTicket, so its behavior is preserved."
     },
     {
       "name": "Description names the task and the trigger words",
       "max_score": 15,
-      "description": "The description says in the third person what the skill does (a lookup in a collection followed by an action on the found or missing element) and lists situations in the words a user would type, such as upsert, find-or-create, get-or-default, ending with a phrase like even if the user never says stream or Optional, and says what it is not for."
+      "description": "The description says in the third person what the skill does (a lookup in a collection followed by an action on the found or missing element) and lists at least three short names a user would type, such as upsert, find-or-create, get-or-default; the list of situations ends with a phrase like even if the user never says stream or Optional, and a last clause says what it is not for."
     },
     {
       "name": "Hard stop traces to the correction",
@@ -25,22 +25,22 @@
     {
       "name": "References carry the pair and the why",
       "max_score": 15,
-      "description": "references/examples.md shows the loop version under a not-like-this heading and the stream version under a like-this heading, in the conversation's own domain, with a one-sentence why taken from the correction."
+      "description": "references/examples.md shows the loop version under a not-like-this heading and the stream version under a like-this heading, in the conversation's own ticket domain, with a one-sentence why taken from the correction."
     },
     {
-      "name": "Eval task is realistic, in another domain, and gives nothing away",
+      "name": "Eval tasks are realistic, in other domains, and give nothing away",
       "max_score": 15,
-      "description": "The eval task.md is a prompt someone would type (a class with a collection and existing helpers, a method to add), uses a domain other than tickets and other than any example the written skill contains, and does not mention stream, Optional, findFirst, map, orElseGet, loops, or early returns."
+      "description": "There are at least three eval scenarios, each testing the lookup correction. Each task.md reads as a message someone would type about their own code: a request to add or change a method, with the code it works on shipped as files beside task.md (a project folder or fixture) rather than pasted into a brief or followed by a list of requirements. Each uses a domain other than tickets and other than any example the written skill contains, and none mentions stream, Optional, findFirst, map, orElseGet, loops, or early returns."
     },
     {
-      "name": "Eval checklist weights the habit",
+      "name": "Eval checklists weight the habit",
       "max_score": 10,
-      "description": "criteria.json gives most of its points to the habit (stream lookup, Optional handling of both cases, no loop or early return) and a minority to compiling, preserved behavior and scope."
+      "description": "Each criteria.json gives most of its points to the habit (stream lookup, Optional handling of both cases, no loop or early return) and a minority to compiling, preserved behavior and scope."
     },
     {
-      "name": "Nothing speculative or copied",
+      "name": "Nothing speculative, copied, or invented",
       "max_score": 5,
-      "description": "The skill text does not quote the eval's class or method names, does not mention scores or scenarios, and does not promise behaviors the conversation never showed."
+      "description": "The skill text does not quote the evals' class or method names, does not mention scores or scenarios, and does not promise behaviors the conversation never showed; no file reports a score or a run that did not happen."
     }
   ]
 }

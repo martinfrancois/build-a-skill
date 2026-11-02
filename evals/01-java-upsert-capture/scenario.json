@@ -1,0 +1,7 @@
+{
+  "description": "The ticket-desk project at the commit before the first prompt, with the version that stayed left uncommitted, as at the end of the session.",
+  "fixtures": {
+    "project": { "type": "directory", "path": "./project", "installPath": "ticket-desk" }
+  },
+  "setup": ["./setup.sh"]
+}

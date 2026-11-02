@@ -1,0 +1,9 @@
+{
+  "name": "editor-prefs",
+  "version": "0.2.0",
+  "private": true,
+  "type": "module",
+  "engines": { "node": ">=22" },
+  "scripts": { "build": "tsc -p ." },
+  "devDependencies": { "typescript": "^5.6.0", "@types/node": "^22.0.0" }
+}

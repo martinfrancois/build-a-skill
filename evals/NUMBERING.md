@@ -43,6 +43,8 @@ folder no longer exists.
 |---|---|---|
 | main | 01 | `evals/01-java-upsert-capture` |
 | reference | 02 | `evals-reference/02-pull-request-description-capture` |
+| reference | 03 | `evals-reference/03-python-file-writes-two-rounds` |
+| reference | 04 | `evals-reference/04-typescript-unknown-json-capture` |
 
 ## Local screening results (2026-10-21)
 

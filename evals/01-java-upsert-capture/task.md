@@ -1,21 +1,10 @@
-# Turn this conversation into a skill
+Earlier in this session, in `ticket-desk/`:
 
-Below is the record of a conversation with a coding agent: the first prompt, what the agent
-wrote, the correction, and the version that stayed. Turn it into a skill folder. Assume the
-Agent Skills format (a `SKILL.md` with `name` and `description` in its front matter) and Java 17.
+**Me:** Add a method `findOrOpenTicket(String reference)` to `TicketDesk`: if a ticket with that
+reference exists, return it after marking it as touched, otherwise open a new one with that
+reference and return it.
 
-Write these files and nothing else: `skills/<name>/SKILL.md`, `skills/<name>/references/examples.md`,
-and one eval scenario as `evals-reference/01-<slug>/task.md` and `evals-reference/01-<slug>/criteria.json`
-(a weighted checklist: `context`, `type`, and `checklist` items with `name`, `description`,
-`max_score`). Choose the name. Do not run anything.
-
-## First prompt
-
-> Add a method `findOrOpenTicket(String reference)` to `TicketDesk`: if a ticket with that
-> reference exists, return it after marking it as touched, otherwise open a new one with that
-> reference and return it.
-
-## What the agent wrote
+**You:** Added to `src/main/java/desk/TicketDesk.java`:
 
 ```java
 public Ticket findOrOpenTicket(String reference) {
@@ -28,11 +17,9 @@ public Ticket findOrOpenTicket(String reference) {
 }
 ```
 
-## The correction, in the user's words
+**Me:** Don't loop over the list with an early return. Use a stream and the Optional API.
 
-> Don't loop over the list with an early return. Use a stream and the Optional API.
-
-## The version that stayed
+**You:** Changed it:
 
 ```java
 public Ticket findOrOpenTicket(String reference) {
@@ -44,4 +31,5 @@ public Ticket findOrOpenTicket(String reference) {
 }
 ```
 
-The user accepted this and said nothing more.
+**Me:** That's the one. Turn this into a skill so you write it like that the first time. Put it
+next to ticket-desk.

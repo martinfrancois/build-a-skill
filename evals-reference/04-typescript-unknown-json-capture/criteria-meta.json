@@ -1,0 +1,17 @@
+{
+  "metadata": {
+    "invocation": "natural",
+    "task_type": "implementation",
+    "evidence_type": "focused_reference"
+  },
+  "categories": {
+    "Creates the skill and its evals next to editor-prefs": "safety",
+    "Description names the task and the trigger words": "quality",
+    "Hard stop is the correction and nothing more": "quality",
+    "Workflow ends in a check": "quality",
+    "References carry the pair and the why": "quality",
+    "Eval tasks are realistic, in other domains, and give nothing away": "quality",
+    "Eval checklists weight the habit": "quality",
+    "Nothing speculative, copied, or invented": "maintainability"
+  }
+}

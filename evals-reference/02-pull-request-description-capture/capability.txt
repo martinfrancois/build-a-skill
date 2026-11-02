@@ -1,1 +1,1 @@
-Turning a correction about pull request descriptions into a skill folder with an eval
+Turning a session's correction about a pull request description into a skill repository with evals

@@ -1,5 +1,5 @@
 {
-  "context": "Reference coverage: at the end of a session where the agent opened a pull request and the user corrected its description, the user asks for a skill. A good answer creates a repository next to gateway-limits with a SKILL.md whose description names the task and the words a user would type, a hard stop that is the correction and nothing invented beyond it, a numbered workflow ending in a check, a references file with the not-like-this and like-this pair and the why, and at least three realistic eval scenarios for that correction about other changes, with no hint of the answer and their points on the habit.",
+  "context": "Main eval: at the end of a session where the agent opened a pull request and the user corrected its description, the user asks for a skill. A good answer creates a repository next to gateway-limits with a SKILL.md whose description names the task and the words a user would type, a hard stop that is the correction and nothing invented beyond it, a numbered workflow ending in a check, a references file with the not-like-this and like-this pair and the why, and at least three realistic eval scenarios for that correction about other changes, with no hint of the answer and their points on the habit.",
   "type": "weighted_checklist",
   "checklist": [
     {

@@ -26,6 +26,9 @@ it scores 100 both with and without the skill, and to `evals/` only when both ho
 2. Without the skill, it scores at least 30 points lower, so the delta is 30 percentage points or
    more.
 
+Keep at least three scenarios in `evals/`: the Tessl registry gives a full aggregate score only
+to a main suite of three or more.
+
 Move the folder rather than copy it: a main `task.md` that shares 85% or more of its eight-word
 runs with a reference or regression task fails the validator as a duplicate. Run
 `scripts/classify_eval_result.py` on the run JSON to get the recommendation for one scenario.

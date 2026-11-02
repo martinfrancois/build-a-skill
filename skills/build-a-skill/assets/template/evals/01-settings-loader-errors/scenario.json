@@ -1,0 +1,6 @@
+{
+  "description": "The orders service, with the settings it reads documented in its README and load_settings still a stub.",
+  "fixtures": {
+    "project": { "type": "directory", "path": "./project", "installPath": "orders-service" }
+  }
+}

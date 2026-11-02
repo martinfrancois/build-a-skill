@@ -20,17 +20,22 @@ Follow these in order.
    paste the issue text in as guidance. If the plain session already gets it right, you have no
    skill to write; go back to step 1. If the guided session still gets it wrong, the issue is not
    clear yet; rewrite it and replay.
-4. **Reduce to an eval.** Make a folder in `evals-reference/` with the same four files as
-   `evals/01-settings-loader-errors`:
-   - `task.md`: the prompt a user would type, with no fix, an `Assume ...` sentence for the
-     version, and no skill name unless the scenario is explicit. The shipped reference example
-     is explicit, so it opens with "Use $my-skill"; leave those words out of a natural scenario.
+4. **Reduce to an eval.** Make a folder in `evals-reference/` shaped like the example scenarios.
+   They exist only until `scripts/start_skill.sh` deletes them, so read one before you run it;
+   [docs/agents/evals.md](docs/agents/evals.md) describes the same shape. Each folder holds:
+   - `task.md`: the message a user would send about their own code, one or two sentences naming
+     the file and the change, with no fix and no skill name unless the scenario is explicit.
+   - `scenario.json` and a folder such as `project/`: the code the task works on, shipped as a
+     directory fixture, never pasted into `task.md`. A task that ships nothing needs an
+     `Assume ...` sentence for the version. The example reference and regression scenarios are
+     explicit, so they open with "Use $my-skill"; leave those words out of a natural scenario.
    - `capability.txt`: one line naming what the scenario tests.
    - `criteria.json`: checks worth 15 safety, 80 quality, and 5 maintainability points. Start its
      `context` with "Reference coverage"; the validator keeps "Main eval" for `evals/`.
    - `criteria-meta.json`: the invocation, task type, evidence type, and a category per check.
 
-   Then clean up the example:
+   Then clean up the example (`scripts/start_skill.sh <name>` renames the skill and does the
+   first two steps in one go):
    - Delete the three example scenarios, which test the error message convention.
    - Replace the rows of the "Current numbers" table in `evals/NUMBERING.md` with yours. The
      validator flags rows whose folder no longer exists.
@@ -42,8 +47,10 @@ Follow these in order.
    The validator also fails a main task that repeats 85% or more of a reference or regression
    task, so move a scenario between suites instead of copying it.
 5. **Write SKILL.md from the issue only.** Rewrite these from the issue, in your own subject:
-   - `skills/my-skill/SKILL.md`: the `description` (what the skill does, then the situations that
-     should trigger it) and the whole body.
+   - `skills/my-skill/SKILL.md`: the `description` and the whole body. The description has four
+     parts: what the skill does; "Use for any of" and at least five short keywords people type;
+     "even if the user never says" and the words of the fix; "Not for" and the nearest task it
+     should not fire on.
    - `skills/my-skill/references/`: both files, with examples from a domain none of your eval
      tasks use.
    - `skills/my-skill/agents/openai.yaml`: `short_description` and `default_prompt`. Keep
@@ -63,7 +70,8 @@ Follow these in order.
    the task: adding hints to `task.md` or loosening `criteria.json` makes the number meaningless.
    Once the scenario scores 100 with the skill and at least 30 points less without it, move it
    to `evals/` and change the start of its `context` from "Reference coverage" to "Main eval".
-   `evals/NUMBERING.md` has the full rule.
+   Promote at least three: the Tessl registry gives a full aggregate score only to a main suite
+   of three or more. `evals/NUMBERING.md` has the full rule.
 8. **Weight by difference.** Read the per-check results of the run without the skill
    (`tessl eval view <run-id>`). Move quality points toward the checks it missed and away from the
    ones both runs passed, keep the 15/80/5 split, and rerun both variants. This changes how many
@@ -84,11 +92,14 @@ Follow these in order.
 | `evals-reference/` | Reference suite, where new scenarios start; ships with one example scenario |
 | `evals-regression/` | Regression suite, run with the skill only; ships with one example scenario |
 | `evals/NUMBERING.md` | How scenarios are numbered and when one moves to the main suite |
-| `scripts/` | Suite runner, criteria validator, and result classifier |
-| `AGENTS.md`, `docs/agents/` | Rules for coding agents working on this repo: workflow, evals, skill text |
+| `scripts/` | One-time start script, suite runner, criteria validator, and result classifier |
+| `AGENTS.md`, `CLAUDE.md`, `docs/agents/` | Rules for coding agents working on this repo: workflow, evals, skill text, local screening; `CLAUDE.md` only imports `AGENTS.md` for Claude Code |
 | `tessl.json`, `.tessl-plugin/plugin.json` | Tessl project and plugin manifests, version 0.1.0 |
 
 ## How to run
+
+The scenario names in the commands below are the template's examples. `scripts/start_skill.sh`
+deletes them, so use your own scenario names after that.
 
 The local checks are free:
 
@@ -132,18 +143,20 @@ scripts/run_eval_suite.sh reference 01-webhook-error-review
 
 ### Screen locally for a cent a run
 
-When the credits are used up, or before spending them, run the same scenarios on your own
-machine against the model behind Tessl's default solver. You need a DeepSeek API key in
-`~/deepseek-api-key` (see [Local screening](docs/agents/local-screening.md) for the setup):
+To save Tessl credits, or when Tessl blocks hosted runs, run the same scenarios on your own
+machine against the model behind Tessl's default solver, DeepSeek V4.1 Flash. You need a DeepSeek
+API key in `~/deepseek-api-key` (see [Local screening](docs/agents/local-screening.md) for the
+setup):
 
 ```bash
-scripts/local_screen.sh -n 2 evals-reference/01-webhook-error-review            # without the skill
-scripts/local_screen.sh -m skill -n 2 evals-reference/01-webhook-error-review   # with the skill
+scripts/local_screen.sh -x -n 2 evals-reference/01-webhook-error-review            # without the skill
+scripts/local_screen.sh -x -m skill -n 2 evals-reference/01-webhook-error-review   # with the skill
 scripts/local_screen.sh --summary && scripts/local_screen.sh --summary -m skill
 ```
 
-Local numbers predict the hosted result and decide where a scenario belongs; they are never
-hosted evidence.
+`-x` runs each scenario's `setup.sh` on your machine with your account; read it first when
+someone else wrote the scenario. Local numbers predict the hosted result and decide where a
+scenario belongs; they are never hosted evidence.
 
 To decide where a scenario belongs after a run:
 
@@ -222,18 +235,18 @@ frozen.
 Check the balance before a hosted run, not after:
 
 ```bash
-tessl org usage --json   # credits.remaining, credits.overLimit, credits.resetsAt
+tessl org usage --json   # credits.remaining, credits.overLimit, credits.blocked, credits.resetsAt
 ```
 
 Three things that are easy to misread:
 
 - The "Daily eval usage: N/1,000" line that `tessl eval run` prints is a separate cap of 1,000
   eval attempts per day (reset at 00:00 UTC). It is not your credit balance.
-- Over the allowance, Tessl may still accept runs with a one-line notice instead of refusing
-  them. That is not permission to keep spending: stop and use the
-  [local screen](docs/agents/local-screening.md) until the month resets.
-- `tessl review run` is not free: it draws on the same credits, so check the balance before a
-  review too.
+- Over the allowance, `credits.overLimit` turns true and Tessl keeps accepting runs with a
+  one-line notice. Spending past the allowance is fine, so that is no reason to stop. Hosted runs
+  stop only when `credits.blocked` is true or Tessl refuses a run with "run out of credits"; use
+  the [local screen](docs/agents/local-screening.md) until the block lifts.
+- `tessl review run` is not free: each review costs 10 credits from the same balance.
 
 ## License
 

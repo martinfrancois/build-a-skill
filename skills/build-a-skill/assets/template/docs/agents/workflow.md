@@ -22,10 +22,17 @@ opening pull requests.
   ```
 
 - Hosted eval runs and the quality review cost Tessl credits
-  ([prices](../../README.md#credits)). Before a hosted run, check `tessl org usage --json`: if
-  `credits.overLimit` is true or `credits.remaining` is below the run's estimate, stop and use
-  the [local screen](local-screening.md) instead, even if Tessl would still accept the run. Go
-  in this order and stop at the first stage that is not clean:
+  ([prices](../../README.md#credits)). Before the first hosted run, ask the user once which way
+  to go, and follow the answer:
+  - Screen locally first with DeepSeek V4.1 Flash, the [local screen](local-screening.md). It
+    needs a DeepSeek API key in `~/deepseek-api-key`, costs one to two cents a run, and saves
+    Tessl credits.
+  - Go straight to hosted Tessl runs.
+- Spending past Tessl's monthly allowance is fine, so `credits.overLimit: true` is no reason to
+  stop or switch. Hosted runs stop only when `tessl org usage --json` shows
+  `credits.blocked: true` or Tessl refuses a run with "run out of credits"; then use the local
+  screen until the block lifts.
+- Go through the hosted stages in this order and stop at the first one that is not clean:
   1. Quality review at 100:
      `tessl review run --threshold 100 skills/my-skill/SKILL.md`. Fix every finding before any
      eval run.

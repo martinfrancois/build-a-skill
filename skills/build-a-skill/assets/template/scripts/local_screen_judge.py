@@ -33,7 +33,8 @@ secret = key_file.read_text().strip() if key_file.is_file() else ""
 files = []
 for path in sorted(work.rglob("*")):
     # CLAUDE.md is the harness's copy of the rules bundle, not the agent's work.
-    if not path.is_file() or path.suffix == ".class" or ".claude" in path.parts or path.name == "CLAUDE.md":
+    # A symlink could point at a file outside the work directory, so none is read.
+    if path.is_symlink() or not path.is_file() or path.suffix == ".class" or {".claude", ".git"} & set(path.parts) or path.name == "CLAUDE.md":
         continue
     if path.stat().st_size > 60000:
         continue
@@ -71,9 +72,11 @@ Inside "reasoning" use no double quotes; quote identifiers with backticks instea
 
 
 def ask_judge() -> list:
+    # The prompt goes on stdin: with a fixture and a copied template it can pass the per-argument
+    # size limit of execve.
     out = subprocess.run(
-        ["claude", "-p", "--model", judge_model, "--output-format", "json", prompt],
-        capture_output=True, text=True, cwd=str(run_dir), check=False,
+        ["claude", "-p", "--model", judge_model, "--output-format", "json"],
+        input=prompt, capture_output=True, text=True, cwd=str(run_dir), check=False,
     )
     if out.returncode != 0:
         sys.exit(f"judge failed: {out.stderr[-500:]}")

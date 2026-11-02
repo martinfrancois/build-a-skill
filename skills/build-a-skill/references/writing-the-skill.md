@@ -2,45 +2,62 @@
 
 ## From the conversation only
 
-Every rule in the skill traces to a correction the user made in this conversation. Write the
-rule, the pair (not like this, like this), and the why from the capture notes. Anything you add
-because it "might also go wrong" is speculation and becomes a rule the agent follows with
-confidence and no evidence; leave it out. This covers the hard stops, every workflow step and
-every line of the references: a rule about a neighbouring method, a style, a length, or a tool
-the user never mentioned is out. The same holds for choices the version that stayed happens to
-make: they appear in the pair, but they become a rule only if the user asked for them. After
-writing, read `SKILL.md` once more against the capture and delete every rule that no correction
-supports.
+Every rule in the skill traces to a correction the user made in this conversation. Write the rule,
+the pair (not like this, like this), and the why from the capture notes. Anything you add because
+it "might also go wrong" is speculation and becomes a rule the agent follows with confidence and
+no evidence; leave it out. This covers the hard stops, every workflow step and every line of the
+references: a rule about a neighbouring method, a style, a length, or a tool the user never
+mentioned is out. The same holds for choices the version that stayed happens to make: they appear
+in the pair, but they become a rule only if the user asked for them, so a workflow step says what
+to do, never how the kept version happened to do it (a helper it happened to extract, a naming or
+formatting detail). Places the habit might also apply, such as other input sources, other
+languages, code review, or refactoring, are speculation too unless the conversation showed them,
+in the description as anywhere else, and so is a ban on the opposite of what the user asked for.
+After writing, read `SKILL.md` once more against the capture and delete every rule that no
+correction supports.
 
 ## The description is the trigger
 
-Agents read only the `name` and `description` at startup and decide from them whether to open
-the rest. Write the description in the third person: what the skill does, then the situations
-that should load it, in the words a user would type, then "even if the user never says ...",
-then one clause on what it is not for, so a generous trigger does not fire on every task in the
-language. Under 1,024 characters. Be generous with trigger words; agents undertrigger. Among
-them, list the short names people give the habit itself, the terms they would put in a request
-or a commit title; a description of what the code does is not a trigger word. For an
-error-message habit, "error message", "exception text" and "raise" are names; "when a function
-rejects its input" only describes the code. The front matter is YAML: a colon followed by a
-space inside an unquoted description breaks it, and `tessl skill lint` does not notice;
-`tessl review run` and the agents do. Use a full stop or a semicolon instead, or quote the whole
-value.
+Agents read only the `name` and `description` at startup and decide from them whether to open the
+rest, and agents undertrigger. Write the description in the third person, in four parts, under
+1,024 characters:
+
+1. What the skill does, with the verb of the task the conversation did: a conversation that
+   wrote code gives "Writes ..." or "Adds ...", not "Writes and reviews ...".
+2. "Use for any of" and a comma-separated list of at least five short keywords, one to three words
+   each, the way a user types them in a request: the name of the task, the code or command where
+   the mistake happens, and the words for what the correction rejected and what it asked for.
+   Nouns and commands, not "-ing" phrases or sentences about a situation.
+3. "even if the user never says" and the words of the fix.
+4. "Not for" and the nearest task it should not fire on.
+
+For a commit-message habit: "Writes git commit messages with a short imperative subject and a
+body that says why. Use for any of commit, commit message, git commit, amend, squash, subject
+line, commit body, even if the user never says imperative or body. Not for pull request
+descriptions or changelogs."
+
+The front matter is YAML: a colon followed by a space inside an unquoted description breaks it,
+and `tessl skill lint` does not notice; `tessl review run` and the agents do. Use a full stop or a
+semicolon instead, or quote the whole value.
 
 ## The shape of SKILL.md
 
 - A title and two sentences on what the skill is for.
-- At most two hard stops, each one the correction the user made, in what it said and nothing
-  more: something the correction implies but never said, such as banning a neighbouring method,
-  is not a hard stop. With more than two corrections, the two the user pressed hardest are hard
-  stops and the rest become workflow steps; more than two means none stands out.
-- "When to use": three to five bullets.
+- At most two hard stops, each one the correction the user made, in what it said and nothing more:
+  both what it rejected and what it asked for instead, in one bullet. Something the correction
+  implies but never said, such as banning a neighbouring method, is not a hard stop. With more
+  than two corrections, the two the user pressed hardest are hard stops and the rest become
+  workflow steps; more than two means none stands out.
 - A numbered workflow whose last step is a check the agent can tell is done: for code, it
   compiles and no longer contains what the correction rejected.
 - A reference table: file, and when to read it.
 - One pair under the headings "Not like this" and "Like this", with the why in one sentence.
 
 Keep `SKILL.md` under about 120 lines. Detail that only some tasks need goes into `references/`.
+
+The template's `skills/my-skill` is a team convention, not a conversation: it shows the layout
+only. Replace every line of it; its rules, its review format, its languages, and its "Writes and
+reviews" opening do not carry over unless the conversation showed them too.
 
 ## References as pairs with the why
 

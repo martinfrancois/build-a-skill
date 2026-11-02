@@ -15,10 +15,14 @@ Changing the `build-a-skill` skill, its references, or the template it copies.
   asks the user, as `references/transcripts.md` says. Keep that rule.
 - Keep `SKILL.md` under about 120 lines; detail goes to `references/`. The description is the
   trigger: third person, what it does, then the situations and the words a user would type.
+- The skill's own examples (trigger words, rules, pairs) and the template's example skill come
+  from habits that none of this repository's scenarios test, so a score shows the skill at work
+  rather than a recognized example.
 - The template under `assets/template/` is a complete repository: its own `README.md`,
   `AGENTS.md` rules under `docs/agents/`, three example scenarios, the scripts, and the
   manifests. A change to how a produced repository should work goes into the template, not into
-  the skill text.
+  the skill text. The template's `AGENTS.md` and `CLAUDE.md` are the entry points of the
+  repositories it produces; while working on this repository, the rules here win.
 - Local checks before committing, all free:
 
   ```bash
@@ -31,5 +35,6 @@ Changing the `build-a-skill` skill, its references, or the template it copies.
   ```
 
 - Commits and pull request titles use Conventional Commits: `feat(skill)` or `fix(skill)` for
-  the skill text and references, `feat(template)` or `fix(template)` for the template, `docs`
-  for text that changes neither.
+  the skill text and references, `feat(template)` or `fix(template)` for the template,
+  `test(evals)` for this repository's scenarios, `docs` for text that changes none of them. A
+  change to suite membership goes in its own `test(evals)` commit.

@@ -1,0 +1,7 @@
+{
+  "description": "The gateway-limits repository with the branch from the session checked out.",
+  "fixtures": {
+    "project": { "type": "directory", "path": "./project", "installPath": "gateway-limits" }
+  },
+  "setup": ["./setup.sh"]
+}

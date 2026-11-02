@@ -1,0 +1,46 @@
+{
+  "context": "Reference coverage: at the end of a TypeScript session with one correction about parsed JSON, the user asks for a skill. A good answer creates a repository next to editor-prefs with a SKILL.md whose description names the task and the words a user would type, a hard stop that is the correction and nothing more, even where the accepted version makes further choices, a numbered workflow ending in a check, a references file with the not-like-this and like-this pair and the why, and at least three realistic eval scenarios for that correction in other domains, with no hint of the answer and their points on the habit.",
+  "type": "weighted_checklist",
+  "checklist": [
+    {
+      "name": "Creates the skill and its evals next to editor-prefs",
+      "max_score": 15,
+      "description": "A new folder beside editor-prefs holds skills/<name>/SKILL.md with front matter giving a kebab-case name and a description, skills/<name>/references/examples.md, and eval scenario folders each with a task.md and a criteria.json that parses as a weighted checklist, in whichever suite folder the repository starts them (a new scenario usually starts outside the main suite). editor-prefs keeps the accepted readSettings, so its behavior is preserved."
+    },
+    {
+      "name": "Description names the task and the trigger words",
+      "max_score": 15,
+      "description": "The description says in the third person what the skill does (handling the result of JSON.parse or other untyped input in TypeScript) and lists at least three short names a user would type, such as JSON.parse, parse JSON, any, unknown, type guard, read a config file; the list of situations ends with a phrase like even if the user never mentions types, and a last clause says what it is not for."
+    },
+    {
+      "name": "Hard stop is the correction and nothing more",
+      "max_score": 15,
+      "description": "SKILL.md has one or two hard stops, each the correction the user made (parsed JSON is typed unknown, never any, and its shape is checked before it is used or returned). Choices the accepted version happens to make are not turned into rules: no rule requires a separate type guard function, a particular error message, a cast style, a validation library such as zod, or bans every as."
+    },
+    {
+      "name": "Workflow ends in a check",
+      "max_score": 10,
+      "description": "SKILL.md has a numbered workflow whose last step is something the agent can tell is done, such as the code compiles under strict mode and no parsed value is any or used before its shape is checked."
+    },
+    {
+      "name": "References carry the pair and the why",
+      "max_score": 15,
+      "description": "references/examples.md shows the any version under a not-like-this heading and the unknown-and-checked version under a like-this heading, in the conversation's own settings domain, with a one-sentence why taken from the correction."
+    },
+    {
+      "name": "Eval tasks are realistic, in other domains, and give nothing away",
+      "max_score": 15,
+      "description": "There are at least three eval scenarios, each testing the parsed-JSON correction. Each task.md reads as a message someone would type about their own code, such as a request to add a function that reads or receives JSON, with the code it works on shipped as files beside task.md (a project folder or fixture) rather than pasted into a brief or followed by a list of requirements. Each uses a domain other than settings and other than any example the written skill contains, and none mentions any, unknown, type guards, validation, or checking the shape."
+    },
+    {
+      "name": "Eval checklists weight the habit",
+      "max_score": 10,
+      "description": "Each criteria.json gives most of its points to the habit (the parsed value typed unknown, its shape checked before use, a failure when the shape is wrong) and a minority to compiling, behavior and scope."
+    },
+    {
+      "name": "Nothing speculative, copied, or invented",
+      "max_score": 5,
+      "description": "The skill text does not quote the evals' function or type names, does not mention scores or scenarios, and does not promise behaviors the conversation never showed; no file reports a score or a run that did not happen."
+    }
+  ]
+}

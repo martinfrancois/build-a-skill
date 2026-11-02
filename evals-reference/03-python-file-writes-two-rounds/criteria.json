@@ -1,0 +1,46 @@
+{
+  "context": "Reference coverage: at the end of a Python session with two corrections about writing a file, the user asks for a skill. A good answer creates a repository next to inventory-service with a SKILL.md whose description names the task and the words a user would type, one hard stop per correction and nothing invented beyond them, a numbered workflow ending in a check, a references file with one not-like-this and like-this pair per round and its why, and at least three realistic eval scenarios, at least one per correction, in other domains, with no hint of the answer and their points on the habit each tests.",
+  "type": "weighted_checklist",
+  "checklist": [
+    {
+      "name": "Creates the skill and its evals next to inventory-service",
+      "max_score": 15,
+      "description": "A new folder beside inventory-service holds skills/<name>/SKILL.md with front matter giving a kebab-case name and a description, skills/<name>/references/examples.md, and eval scenario folders each with a task.md and a criteria.json that parses as a weighted checklist, in whichever suite folder the repository starts them (a new scenario usually starts outside the main suite). inventory-service keeps the accepted save_snapshot and close_day, so its behavior is preserved."
+    },
+    {
+      "name": "Description names the task and the trigger words",
+      "max_score": 15,
+      "description": "The description says in the third person what the skill does (writing files from Python code) and lists at least three short names a user would type, such as open, write file, save, export, CSV, encoding, atomic write; the list of situations ends with a phrase like even if the user never mentions encoding or crashes, and a last clause says what it is not for."
+    },
+    {
+      "name": "One hard stop per correction, nothing invented",
+      "max_score": 15,
+      "description": "SKILL.md has at most two hard stops, each one of the user's corrections: every open of a text file passes an explicit encoding; a file that something reads later is written to a temporary file beside it and then swapped into place (os.replace or an equivalent rename). No rule is added that the conversation does not support, such as fsync, file locks, backups, the tempfile module, a fixed temporary file name, newline handling, logging, type hints, or tests."
+    },
+    {
+      "name": "Workflow ends in a check",
+      "max_score": 10,
+      "description": "SKILL.md has a numbered workflow whose last step is something the agent can tell is done, such as every open names an encoding and no file that something reads later is written in place."
+    },
+    {
+      "name": "References carry both pairs and their why",
+      "max_score": 15,
+      "description": "references/examples.md has one section per round, each with the rejected code under a not-like-this heading and the accepted code under a like-this heading, in the conversation's own snapshot domain, and a one-sentence why restating that round's correction."
+    },
+    {
+      "name": "Evals are realistic, one or more per correction, with no hint",
+      "max_score": 15,
+      "description": "There are at least three eval scenarios and each correction has at least one: one whose trap is an open with no encoding and one whose trap is a file written in place that something reads later. Each task.md reads as a message someone would type about their own code, with the code it works on shipped as files beside task.md (a project folder or fixture) rather than pasted into a brief or followed by a list of requirements. Each is in a domain other than inventory, tills, or stock counts, and none says to pass an encoding, to use UTF-8, to write a temporary file, to swap or replace the file, or to survive a crash."
+    },
+    {
+      "name": "Eval checklists weight the habit",
+      "max_score": 10,
+      "description": "Each criteria.json gives most of its points to the correction its scenario tests and a minority to behavior, scope and style."
+    },
+    {
+      "name": "Nothing speculative, copied, or invented",
+      "max_score": 5,
+      "description": "The skill text does not quote the evals' function or class names, does not mention scores or scenarios, and does not promise behaviors the conversation never showed; no file reports a score or a run that did not happen."
+    }
+  ]
+}

@@ -1,1 +1,1 @@
-Turning one correction in a conversation into a skill folder with an eval
+Turning a one-correction Java session into a skill repository with evals

@@ -18,6 +18,7 @@ import json
 import os
 import subprocess
 import sys
+import tempfile
 from pathlib import Path
 
 scenario_dir = Path(sys.argv[1]).resolve()
@@ -72,12 +73,17 @@ Inside "reasoning" use no double quotes; quote identifiers with backticks instea
 
 
 def ask_judge() -> list:
-    # The prompt goes on stdin: with a fixture and a copied template it can pass the per-argument
-    # size limit of execve.
-    out = subprocess.run(
-        ["claude", "-p", "--model", judge_model, "--output-format", "json"],
-        input=prompt, capture_output=True, text=True, cwd=str(run_dir), check=False,
-    )
+    # The prompt goes on stdin: with a fixture and a copied template it can exceed the
+    # per-argument size limit of execve. Tessl's judge sees only the task, the checklist and the
+    # files, so the user's own CLAUDE.md, the project's, and auto-memory stay out: a personal
+    # coding rule would otherwise grade the solution. The login still comes from the regular
+    # config. An empty directory as cwd keeps the judge from reading anything beside the prompt.
+    with tempfile.TemporaryDirectory() as judge_cwd:
+        out = subprocess.run(
+            ["claude", "-p", "--model", judge_model, "--output-format", "json",
+             "--setting-sources", "local", "--settings", '{"autoMemoryEnabled": false}'],
+            input=prompt, capture_output=True, text=True, cwd=judge_cwd, check=False,
+        )
     if out.returncode != 0:
         sys.exit(f"judge failed: {out.stderr[-500:]}")
     text = json.loads(out.stdout)["result"].strip()

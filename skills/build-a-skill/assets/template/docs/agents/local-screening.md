@@ -43,8 +43,11 @@ directions.
    Set `DEEPSEEK_API_KEY_FILE` to use another path. The scripts read the file at run time. Never
    paste the key into a shell profile, a commit, a transcript, or an issue.
 3. Make sure `claude`, `jq`, and `python3` are on `PATH`, and that `claude` is logged in with the
-   account that will pay for the judge calls. The judge defaults to Haiku; set
-   `LOCAL_SCREEN_JUDGE` to pick another model.
+   account that will pay for the judge calls. The judge reads no user settings, so a login that
+   lives only in `~/.claude/settings.json` (an `apiKeyHelper`, or an `env` block with
+   `ANTHROPIC_API_KEY` or a provider's variables) does not reach it; export those variables in
+   the shell instead. The judge defaults to Haiku; set `LOCAL_SCREEN_JUDGE` to pick another
+   model.
 4. Leave `CLAUDECODE` and every other Claude Code variable alone. The scripts isolate the solver
    with its own `CLAUDE_CONFIG_DIR` under the output directory, so the DeepSeek key never touches
    the regular Claude login and the regular login never leaks into the solver.
@@ -96,9 +99,12 @@ What one run does:
    and every file in the work directory to the judge: the installed fixture files and the files
    the agent wrote. It skips symlinks, `.class` files, anything under `.claude/` or `.git/`,
    files named `CLAUDE.md`, and files over 60,000 bytes, and redacts the API key if the agent
-   copied it anywhere. It saves the item scores as `assessment.json` in the same shape as one Tessl
-   solution. The agent's final message is left out, because Tessl's judge grades only the files:
-   a task that asks for an explanation is only satisfied by an explanation in a file. Set
+   copied it anywhere. The judge runs from an empty directory with `--setting-sources local` and
+   auto-memory off, so your own `CLAUDE.md`, the project's, and your saved memories stay out of
+   the grading, as they stay out of Tessl's; it still uses your regular Claude login. It saves
+   the item scores as `assessment.json` in the same shape as one Tessl solution. The agent's
+   final message is left out, because Tessl's judge grades only the files: a task that asks for
+   an explanation is only satisfied by an explanation in a file. Set
    `LOCAL_SCREEN_JUDGE_MESSAGE=1` to include the message when comparing with an older run. The
    console shows the total and one `lost` line per item that lost points, with the judge's reason.
 

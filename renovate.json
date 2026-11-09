@@ -73,6 +73,13 @@
       "addLabels": [
         "major update"
       ]
+    },
+    {
+      "description": "Eval scenario projects are fixtures. Each one replays a user's project as it stood when the session began, so its manifests stay as written; an update would change what the scenario tests.",
+      "matchFileNames": [
+        "**/evals*/*/project/**"
+      ],
+      "enabled": false
     }
   ]
 }
